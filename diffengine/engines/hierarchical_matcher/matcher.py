@@ -1,20 +1,14 @@
 
 from .. import sequence_matcher, ops
 
-from .content_blocks import blockify
+from .clustering import cluster, Paragraph, Sentence, Whitespace
 
 
 class HierarchicalMatcher(DifferenceEngine):
 	def __init__(self, 
-	             last=None,
-                 sentence_end=defaults.PUNCTUATION, 
-                 paragraph_end=defaults.DOUBLE_LINE,
-                 min_group_size=defaults.MIN_GROUP_SIZE):
+                 tokenizer,
+	             last=None):
 		self.tokenizer = tokenizer
-		self.last = last if last != None else []
-		self.sentence_end = sentence_end
-		self.paragraph_end = paragraph_end
-		self.min_group_size = int(min_group_size)
 	
 	def process(self, tokens):
 		delta = diff(
@@ -30,46 +24,36 @@ class HierarchicalMatcher(DifferenceEngine):
 		
 	def serialize(self):
 		return {
-			'list': list(self.last),
-			'sentence_end': {
-				'pattern': self.sentence_end.pattern,
-				'flags': self.sentence_end.flags
-			}
-			'paragraph_end': {
-				'pattern': self.paragraph_end.pattern,
-				'flags': self.paragraph_end.flags
-			}
-			'min_group_size': self.min_group_size
+			'list': list(self.last)
 		}
 	
 	@classmethod
-	def deserialize(cls, doc, tokenizer=difference.simple_split):
+	def deserialize(cls, doc, tokenizer=tokenization.wikitext_split):
 		return cls(
-			last=doc['last'], 
-			sentence_end=re.compile(
-				doc['sentence_end']['pattern'],
-				flags=doc['sentence_end']['flags']
-			)
-			paragraph_end=re.compile(
-				doc['paragraph_end']['pattern'],
-				flags=doc['paragraph_end']['flags']
-			),
-			min_group_size=doc['min_group_size']
+			tokenizer=tokenizer,
+			last=doc['last']
 		)
 	
 
 
-def diff(a, b, 
-         sentence_end=defaults.PUNCTUATION, 
-         paragraph_end=defaults.DOUBLE_LINE,
-         min_group_size=defaults.MIN_GROUP_SIZE):
+def delta_ops(a, b, min_group_size=defaults.MIN_GROUP_SIZE):
 	
-	a_paragraphs = blockify(a, sentence_end=sentence_end, paragraph_end=paragraph_end, min_group_size=min_group_size)
-	b_paragraphs = blockify(b, sentence_end=sentence_end, paragraph_end=paragraph_end, min_group_size=min_group_size)
+	a_clusters = cluster(a, tokenizer, min_size=min_group_size)
+	b_clusters = cluster(b, tokenizer, min_size=min_group_size)
 	
-	ops = []
+	inserts = []
+	copies = []
+	removals = []
 	
-	a_pg_map = {pg:pg for pg in a_paragraphs}
+	a_cluser_map = {}
+	for cluster in a_clusters:
+		if isinstance(cluster, Paragraph):
+			a_cluser_map[cluster] = cluster
+			
+			for sequence in cluster:
+				
+				if isinstance(cluster, Sentence):
+					a_cluser_map[cluster] = 
 	
 	matched_pgs = set()
 	for b_paragraph in b_paragraphs:

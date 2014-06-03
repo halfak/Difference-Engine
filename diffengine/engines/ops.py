@@ -2,7 +2,7 @@
 A collection of operations necessary to represent a difference.  
 """
 Insert = namedtuple("Insert", ['start', 'end'])
-Persist   = namedtuple("Persist",   ['start', 'end'])
+Persist = namedtuple("Persist",   ['start', 'end'])
 Remove = namedtuple("Remove", ['start', 'end'])
 
 OPERATIONS = {Insert, Copy, Remove}
