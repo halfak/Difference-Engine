@@ -1,11 +1,14 @@
 """
-A collection of operations necessary to represent a difference.  
+A collection of operations necessary to represent a difference.
 """
+
+from collections import namedtuple
+
 Insert = namedtuple("Insert", ['start', 'end'])
 Persist = namedtuple("Persist",   ['start', 'end'])
 Remove = namedtuple("Remove", ['start', 'end'])
 
-OPERATIONS = {Insert, Copy, Remove}
+OPERATIONS = {Insert, Persist, Remove}
 
 """
     0   |1 |2 |3 |4   |5 |6      |7   |8 |9   |10 |11  |12 |13     |14  |15  |16  |17 |18 |19 |20  |21
@@ -56,7 +59,7 @@ Hierarchical Matcher."""
 		"new": [
 			Persist(0, 8), # 'This| |is| |some| |content|.'
 			Persist(8, 9), # '  '
-			Insert(8, 14)    # '|This| |is| |new|.'
+			Insert(8, 14)  # 'This| |is| |new|.'
 		],
 		"removed": [
 			Remove(9, 17) # 'This| |is| |going| |away|.'
@@ -65,8 +68,8 @@ Hierarchical Matcher."""
 	{
 		"new": [
 			Persist(9, 14), # 'This| |is| |new|.'
-			Persist(8, 9), # ' '
-			Persist(0, 8), # 'This|  |is  |   |some|   |content|.'
+			Persist(8, 9),  # ' '
+			Persist(0, 8),  # 'This|  |is  |   |some|   |content|.'
 		],
 		"removed": []
 	}
