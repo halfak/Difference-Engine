@@ -1,6 +1,5 @@
 from difflib import SequenceMatcher as SM
 
-from .difference_engine import DifferenceEngine
 from .ops import Insert, Persist, Remove
 
 
@@ -38,20 +37,3 @@ def parse_opcodes(opcodes, a, b):
 def diff(a, b):
 	opcodes = SM(None, a, b).get_opcodes()
 	return parse_opcodes(opcodes, a, b)
-
-class SequenceMatcher(DifferenceEngine):
-	
-	def __init__(self, last=None):
-		self.last = last if last != None else []
-	
-	def process(self, tokens):
-		delta = diff(self.last, tokens)
-		
-		return delta
-		
-	def serialize(self):
-		return {'list': list(self.last)}
-	
-	@classmethod
-	def deserialize(cls, doc):
-		return cls(last=doc['last'])

@@ -1,3 +1,3 @@
-
-from .hierarchical_matcher import HierarchicalMatcher
-from .sequence_matcher import SequenceMatcher
+from .apply import apply
+from . import hierarchical_matcher
+from . import sequence_matcher

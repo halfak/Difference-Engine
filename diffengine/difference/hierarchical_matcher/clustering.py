@@ -85,7 +85,7 @@ class TokenCluster(MatchableTextSlice):
     
     def __init__(self, start, end, checksum, matches=None):
         super().__init__(start, end, checksum)
-        self.matche = list(matches) if matches != None else []
+        self.matches = list(matches) if matches != None else []
         
     def add_match(self, token_cluster):
         self.matches.append(token_cluster)
@@ -197,7 +197,8 @@ def _read_paragraph(look_ahead, tokenizer, offset, min_size):
     return Paragraph(paragraph_offset, offset, paragraph_sequences)
 
 
-def cluster(tokens, tokenizer, min_size=defaults.MIN_GROUP_SIZE):
+def cluster(tokens, tokenizer=defaults.TOKENIZER,
+                    min_size=defaults.MIN_CLUSTER_SIZE):
 
     look_ahead = LookAhead(tokens)
     offset = 0
