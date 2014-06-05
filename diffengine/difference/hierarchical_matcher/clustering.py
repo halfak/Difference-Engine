@@ -1,5 +1,4 @@
 """
-
 This is a sentence.  This is the end.
 
 This is another paragraph.
