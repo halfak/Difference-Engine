@@ -1,8 +1,3 @@
-from hashlib import sha1
-
-from . import defaults
-from ...util import LookAhead
-
 """
 
 This is a sentence.  This is the end.
@@ -26,20 +21,18 @@ This is another paragraph.
 ]
 """
 
+from hashlib import sha1
 
-class TokenCluster:
+from . import defaults
+from ...util import iteration, LookAhead
+
+
+class MatchableTextSlice:
     
-    def __init__(self, start, end, checksum, matches=None):
+    def __init__(self, start, end, checksum):
         self.start = int(start)
         self.end = int(end)
-        self.checksum = str(checksum)
-        self.matches = matches or []
-        
-    def add_match(self, token_cluster):
-        self.matches.append(token_cluster)
-    
-    def matched(self):
-        return len(self.matches) > 0
+        self.checksum = checksum
     
     def __hash__(self):
         return hash(self.checksum)
@@ -56,21 +49,51 @@ class TokenCluster:
     
     def __len__(self):
         return self.end - self.start
-
-
-
-class Token(TokenCluster):
     
-    def __init__(self, start, content, matches=None):
+
+
+class Token(MatchableTextSlice):
+    
+    def __new__(cls, *args):
+        if len(args) == 1:
+            if isinstance(args[0], cls):
+                return args[0]
+            else:
+                raise TypeError("Expected {0}, got {1}".format(cls,
+                                                               type(args[0])))
+                
+        elif len(args) == 2:
+            start, content = args
+            inst = super().__new__(cls)
+            inst.initiate(start, content)
+            return inst
+    
+    def __init__(self, *args, **kwargs): pass
+    
+    def initiate(self, i, content):
+        checksum = sha1(bytes(content, 'utf8')).digest()
+        super().__init__(i, i+1, checksum)
+        
         self.content = str(content)
-        checksum = hash = sha1(bytes(content, 'utf8')).digest()
-        super().__init__(start, start+1, checksum, matches=matches)
     
-    
-    def tokens(self): return iter([self])
+    def __str__(self): return self.content
     
     def __repr__(self):
         return repr(self.content)
+
+class TokenCluster(MatchableTextSlice):
+    
+    def __init__(self, start, end, checksum, matches=None):
+        super().__init__(start, end, checksum)
+        self.matche = list(matches) if matches != None else []
+        
+    def add_match(self, token_cluster):
+        self.matches.append(token_cluster)
+    
+    def matched(self):
+        return len(self.matches) > 0
+        
+    def tokens(self): raise NotImplementedError
 
 class TokenSequence(TokenCluster, list):
     
@@ -122,7 +145,7 @@ class Paragraph(SequenceCollection):pass
 class Sentence(TokenSequence):pass
 class Whitespace(TokenSequence):pass
 
-def read_whitespace(look_ahead, tokenizer, offset):
+def _read_whitespace(look_ahead, tokenizer, offset):
     #print("Reading whitespace.")
     
     whitespace_offset = offset
@@ -136,7 +159,7 @@ def read_whitespace(look_ahead, tokenizer, offset):
     assert len(whitespace_tokens) == offset - whitespace_offset
     return Whitespace(whitespace_offset, offset, whitespace_tokens)
 
-def read_sentence(look_ahead, tokenizer, offset, min_size):
+def _read_sentence(look_ahead, tokenizer, offset, min_size):
     #print("Reading sentence.")
     
     sentence_offset = offset
@@ -155,7 +178,7 @@ def read_sentence(look_ahead, tokenizer, offset, min_size):
     assert len(sentence_tokens) == offset - sentence_offset
     return Sentence(sentence_offset, offset, sentence_tokens)
 
-def read_paragraph(look_ahead, tokenizer, offset, min_size):
+def _read_paragraph(look_ahead, tokenizer, offset, min_size):
     #print("Reading paragraph.")
     
     paragraph_offset = offset
@@ -164,9 +187,9 @@ def read_paragraph(look_ahead, tokenizer, offset, min_size):
           not tokenizer.PARAGRAPH_SPLIT.match(look_ahead.peek()):
         
         if tokenizer.WHITESPACE.match(look_ahead.peek()):
-            sequence = read_whitespace(look_ahead, tokenizer, offset)
+            sequence = _read_whitespace(look_ahead, tokenizer, offset)
         else:
-            sequence = read_sentence(look_ahead, tokenizer, offset, min_size)
+            sequence = _read_sentence(look_ahead, tokenizer, offset, min_size)
             
         offset = sequence.end
         paragraph_sequences.append(sequence)
@@ -183,9 +206,9 @@ def cluster(tokens, tokenizer, min_size=defaults.MIN_GROUP_SIZE):
     
     while not look_ahead.empty():
         if tokenizer.WHITESPACE.match(look_ahead.peek()):
-            token_cluster = read_whitespace(look_ahead, tokenizer, offset)
+            token_cluster = _read_whitespace(look_ahead, tokenizer, offset)
         else:
-            token_cluster = read_paragraph(look_ahead, tokenizer, offset, min_size)
+            token_cluster = _read_paragraph(look_ahead, tokenizer, offset, min_size)
         
         clusters.append(token_cluster)
         offset = token_cluster.end

@@ -1,4 +1,5 @@
 import re
+
 from ...tokenization import wikitext_split
 
 DOUBLE_LINE = re.compile(r'[\n]{2,}')

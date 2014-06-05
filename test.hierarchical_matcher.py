@@ -17,3 +17,10 @@ tokens = wikitext_split.tokenize("Foo bar derp. Foo bar derp.")
 print(tokens)
 for i, op in enumerate(engine.process(tokens)):
     print("#{0}: {1}".format(i+1, repr(op)))
+
+print("-----------------------")
+
+tokens = wikitext_split.tokenize("Foo bar derp. Foo this is a bar derp.")
+print(tokens)
+for i, op in enumerate(engine.process(tokens)):
+    print("#{0}: {1}".format(i+1, repr(op)))
