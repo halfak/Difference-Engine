@@ -15,7 +15,7 @@ def diff(a, b, tokenizer=defaults.TOKENIZER,
 
 def diff_clusters(a_clusters, b_clusters):
     
-    # Matches and re-sequence unmatched tokens
+    # Match and re-sequence unmatched tokens
     a_token_clusters, b_token_clusters = _match_clusters(a_clusters, b_clusters)
     
     # Perform a simple LCS over unmatched tokens and clusters
