@@ -22,6 +22,7 @@ This is another paragraph.
 """
 
 from hashlib import sha1
+from itertools import chain
 
 from . import defaults
 from ...util import iteration, LookAhead
@@ -93,145 +94,58 @@ class Token(IndexedSegment, MatchableSegment):
     def __repr__(self):
         return repr(self.content)
 
-class TokenSequence(IndexedSegment, list):
+class SegmentNode(IndexedSegment):
     
-    def __init__(self, start, end, tokens):
-        TextSegment.__init__(self, start, end)
+    def __init__(self, children):
+        hash = sha1()
+        
+        IndexedSegment.__init__(self, children[0], children[1])
+    
+    def tokens(self): raise NotImplementedError()
+
+
+class MatchableSegmentNode(SegmentNode, MatchableSegment)
+
+    def __init__(self, children, match=None):
+        SegmentNode.__init__(self, children)
+        hash = sha1("".join(str(t)
+                            for child in children
+                            for t in child.tokens()))
+        
+        MatchableSegment.__init__(self, checksum, match=match)
+
+class TokenSequence(SegmentNode, list):
+    
+    def __init__(self, tokens):
+        SegmentNode.__init__(self, tokens[0], tokens[1])
         list.__init__(self, tokens)
         
     def tokens(self): return self
 
-class MatchableTokenSequence(TokenSequence, MatchableSegment):
-    
-    def __init__(self, *args, tokens, match=None):
-        TokenSequence.__init__(self, *args)
-        
-        checksum = generate_checksum("".join(str(t) for t in tokens))
-        MatchableSegment.__init__(self, checksum, match=match)
-    
 
 
-class TokenSequence(TokenCluster, list):
-    
-    def __init__(self, start, end, tokens, matches=None):
-        hash = sha1()
-        for token in tokens:
-            hash.update(bytes(token.content, 'utf8'))
-        
-        TokenCluster.__init__(self, start, end, hash.digest(), matches=matches)
-        list.__init__(self, tokens)
-    
-    def tokens(self): return iter(self)
-    
-    def __repr__(self):
-        return "{0}({1}, {2}, {3}, {4})".format(
-            self.__class__.__name__,
-            repr(self.start),
-            repr(self.end),
-            "matches={0}".format(repr(self.matches)),
-            list.__repr__(self)
-        )
+class MatchableTokenSequence(TokenSequence, MatchableSegmentNode):
 
+    def __init__(self, tokens, match=None):
+        TokenSequence.__init__(self, tokens)
+        MatchableSegmentNode.__init__(self, tokens, match=None)
+    
 
-class SequenceCollection(TokenCluster, list):
+class SegmentNodeCollection(SegmentNode, list):
     
-    def __init__(self, start, end, sequences, matches=None):
-        
-        hash = sha1()
-        for sequence in sequences:
-            for token in sequence:
-                hash.update(bytes(token.content, 'utf8'))
-            
-        
-        TokenCluster.__init__(self, start, end, hash.digest(), matches=matches)
-        list.__init__(self, sequences)
+    def __init__(self, children):
+        assert sum(isinstance(c, SegmentNode) for c in children) == len(children)
+        SegmentNode.__init__(self, children[0].start, children[-1].end)
+        list.__init__(self, children)
     
-    def tokens(self): return (t for t in s for s in self)
+    def tokens(self): return t for c in children for t in c.tokens()
     
-    def __repr__(self):
-        return "{0}({1}, {2}, {3}, {4})".format(
-            self.__class__.__name__,
-            repr(self.start),
-            repr(self.end),
-            "matches={0}".format(repr(self.matches)),
-            list.__repr__(self)
-        )
 
-class Paragraph(SequenceCollection):pass
-class Sentence(TokenSequence):pass
-class Whitespace(TokenSequence):pass
+class MatchableSegmentNodeCollection(SegmentNodeCollection,
+                                     MatchableSegmentNode): pass
 
-def _read_whitespace(look_ahead, tokenizer, offset):
-    #print("Reading whitespace.")
+class TextSegmenter:
     
-    whitespace_offset = offset
-    whitespace_tokens = []
+    def __init__(self): pass
     
-    while not look_ahead.empty() and tokenizer.WHITESPACE.match(look_ahead.peek()):
-        whitespace_tokens.append(Token(offset, look_ahead.pop()))
-        offset += 1
-        
-    
-    assert len(whitespace_tokens) == offset - whitespace_offset
-    return Whitespace(whitespace_offset, offset, whitespace_tokens)
-
-def _read_sentence(look_ahead, tokenizer, offset, min_size):
-    #print("Reading sentence.")
-    
-    sentence_offset = offset
-    sentence_tokens = []
-    while not look_ahead.empty() and \
-          not tokenizer.PARAGRAPH_SPLIT.match(look_ahead.peek()):
-        
-        sentence_bit = look_ahead.pop()
-        sentence_tokens.append(Token(offset, sentence_bit))
-        offset += 1
-        
-        if tokenizer.SENTENCE_END.match(sentence_bit) and \
-           offset - sentence_offset >= min_size:
-            break
-        
-    assert len(sentence_tokens) == offset - sentence_offset
-    return Sentence(sentence_offset, offset, sentence_tokens)
-
-def _read_paragraph(look_ahead, tokenizer, offset, min_size):
-    #print("Reading paragraph.")
-    
-    paragraph_offset = offset
-    paragraph_sequences = []
-    while not look_ahead.empty() and \
-          not tokenizer.PARAGRAPH_SPLIT.match(look_ahead.peek()):
-        
-        if tokenizer.WHITESPACE.match(look_ahead.peek()):
-            sequence = _read_whitespace(look_ahead, tokenizer, offset)
-        else:
-            sequence = _read_sentence(look_ahead, tokenizer, offset, min_size)
-            
-        offset = sequence.end
-        paragraph_sequences.append(sequence)
-    
-    return Paragraph(paragraph_offset, offset, paragraph_sequences)
-
-
-def cluster(tokens, tokenizer=defaults.TOKENIZER,
-                    min_size=defaults.MIN_CLUSTER_SIZE):
-
-    look_ahead = LookAhead(tokens)
-    offset = 0
-    
-    clusters = []
-    
-    while not look_ahead.empty():
-        if tokenizer.WHITESPACE.match(look_ahead.peek()):
-            token_cluster = _read_whitespace(look_ahead, tokenizer, offset)
-        else:
-            token_cluster = _read_paragraph(look_ahead, tokenizer, offset, min_size)
-        
-        clusters.append(token_cluster)
-        offset = token_cluster.end
-    
-    return clusters
-
-class TextSegment:
-
-class SegmentingTokenizer(Tokenizer): pass
+    def segment(self, text): raise NotImplementedError()
