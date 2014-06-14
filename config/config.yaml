@@ -126,8 +126,8 @@ segmenters:
     western_segmenter:
         class: diffengine.tokenizers.ParagraphSentencesAndWhitespace
         min_segment: 5
-        whitespace: "[\\n\\t\\ ]+"
-        paragraph_split: "[\\t\\ ]*[\n][\\t\\ ]*[\n][\\t\\ ]*"
+        whitespace: "[\\r\\n\\t\\ ]+"
+        paragraph_split: "[\\t\\ \\r]*[\n][\\t\\ \\r]*[\n][\\t\\ \\r]*"
         sentence_end: "[.?!]+"
 
 datastores:

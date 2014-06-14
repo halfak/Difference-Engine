@@ -21,16 +21,16 @@ This is another paragraph.
 ]
 """
 
+import types
 from hashlib import sha1
 from itertools import chain
 
-from . import defaults
-from ...util import iteration, LookAhead
+from ..util import iteration, LookAhead
 
 
 def generate_checksum(string):
     string = str(string)
-    return sha1(bytes(string, 'utf-8', 'replace').digest()
+    return sha1(bytes(string, 'utf-8', 'replace')).digest()
 
 class IndexedSegment:
     
@@ -54,9 +54,9 @@ class MatchableSegment:
         try:
             return self.checksum == other.checksum
         except AttributeError:
-            if
+            try:
                 return self.checksum == generate_checksum(other)
-            except TypeError:
+            except TypeError as e:
                 raise TypeError("Cannot compare {0} ".format(type(self)) + \
                                 "to {0}.".format(type(other)))
     
@@ -80,6 +80,9 @@ class Token(IndexedSegment, MatchableSegment):
             inst = super().__new__(cls)
             inst.initiate(start, content)
             return inst
+        
+        else:
+            raise TypeError("Expected 2 arguments, got {0}.".format(len(args)))
     
     def __init__(self, *args, **kwargs): pass
     
@@ -97,14 +100,16 @@ class Token(IndexedSegment, MatchableSegment):
 class SegmentNode(IndexedSegment):
     
     def __init__(self, children):
-        hash = sha1()
         
-        IndexedSegment.__init__(self, children[0], children[1])
+        
+        self.children = list(children)
+        super().__init__(self.children[0].start,
+                         self.children[-1].end)
     
     def tokens(self): raise NotImplementedError()
 
 
-class MatchableSegmentNode(SegmentNode, MatchableSegment)
+class MatchableSegmentNode(SegmentNode, MatchableSegment):
 
     def __init__(self, children, match=None):
         SegmentNode.__init__(self, children)
@@ -112,33 +117,36 @@ class MatchableSegmentNode(SegmentNode, MatchableSegment)
                             for child in children
                             for t in child.tokens()))
         
-        MatchableSegment.__init__(self, checksum, match=match)
+        MatchableSegment.__init__(self, hash.digest(), match=match)
 
 class TokenSequence(SegmentNode, list):
     
     def __init__(self, tokens):
-        SegmentNode.__init__(self, tokens[0], tokens[1])
         list.__init__(self, tokens)
+        SegmentNode.__init__(self, self)
         
     def tokens(self): return self
+    
+    def __len__(self): return self[-1].end - self[0].start
 
 
-
-class MatchableTokenSequence(TokenSequence, MatchableSegmentNode):
+class MatchableTokenSequence(TokenSequence, MatchableSegment):
 
     def __init__(self, tokens, match=None):
         TokenSequence.__init__(self, tokens)
-        MatchableSegmentNode.__init__(self, tokens, match=None)
+        hash = sha1(b"".join(bytes(t.content, 'utf-8') for t in tokens))
+        
+        MatchableSegment.__init__(self, hash.digest(), match=match)
     
 
 class SegmentNodeCollection(SegmentNode, list):
     
     def __init__(self, children):
         assert sum(isinstance(c, SegmentNode) for c in children) == len(children)
-        SegmentNode.__init__(self, children[0].start, children[-1].end)
+        SegmentNode.__init__(self, children)
         list.__init__(self, children)
     
-    def tokens(self): return t for c in children for t in c.tokens()
+    def tokens(self): return (t for c in children for t in c.tokens())
     
 
 class MatchableSegmentNodeCollection(SegmentNodeCollection,

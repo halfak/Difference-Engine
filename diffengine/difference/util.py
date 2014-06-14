@@ -1,6 +1,6 @@
 from nose.tools import eq_
 
-from ..tokenization import wikitext_split
+from ..tokenizers import WikitextSplit
 from .apply import apply
 
 
@@ -34,8 +34,9 @@ def test_diff_and_replay(diff):
     
     
     """
-    a_tokens = wikitext_split.tokenize(a)
-    b_tokens = wikitext_split.tokenize(b)
+    tokenizer = WikitextSplit()
+    a_tokens = tokenizer.tokenize(a)
+    b_tokens = tokenizer.tokenize(b)
     delta = diff(a_tokens, b_tokens)
     
     replay_b_tokens = list(str(t) for t in apply(delta, a_tokens, b_tokens))
