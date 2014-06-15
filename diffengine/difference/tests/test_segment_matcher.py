@@ -33,8 +33,6 @@ def test_diff():
         sentence_end = re.compile("[.?!]+")
     )
     ops = list(diff(a_tokens, b_tokens, segmenter))
-    print(ops)
-    assert False
     replay_b_tokens = list(str(t) for t in apply(ops, a_tokens, b_tokens))
     
     print(b_tokens)
