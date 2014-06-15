@@ -21,7 +21,7 @@ def test_diff_and_replay(diff):
     """
     
     b = """
-    This is a sentence. 23423423423*(%^333@#())?  ---231m1{}[11][][[[]]] [] ]]]]
+    This is a sentence. 2342a3423423*(%^33a3@#())?  ---231m1{}[11][][[[]]] [] ]]]]
     
     ASDSJDNA  asas
     This is   Lorem ipsum?  LOREM IPSUM
@@ -41,4 +41,6 @@ def test_diff_and_replay(diff):
     
     replay_b_tokens = list(str(t) for t in apply(delta, a_tokens, b_tokens))
     
+    print(b_tokens)
+    print(replay_b_tokens)
     eq_(b_tokens, replay_b_tokens)

@@ -1,13 +1,14 @@
 import re
-from .segmenter import TextSegmenter, Token, MatchableSegmentNodeCollection, \
-                       MatchableTokenSequence, TokenSequence
+from .segmenter import Segmenter
+from .segments import Token, MatchableSegmentNodeCollection, \
+                      MatchableTokenSequence, TokenSequence
 from ..util import LookAhead
 
 class Paragraph(MatchableSegmentNodeCollection):pass
 class Sentence(MatchableTokenSequence):pass
 class Whitespace(TokenSequence):pass
 
-class ParagraphsSentencesAndWhitespace(TextSegmenter):
+class ParagraphsSentencesAndWhitespace(Segmenter):
     
     def __init__(self, whitespace, paragraph_split, sentence_end, *,
                        min_sentence=6):
@@ -70,8 +71,8 @@ class ParagraphsSentencesAndWhitespace(TextSegmenter):
         while not look_ahead.empty() and \
               not self.paragraph_split.match(look_ahead.peek()):
             
-            sentence_bit = look_ahead.pop()
-            sentence_tokens.append(Token(look_ahead.i, sentence_bit))
+            i, sentence_bit = look_ahead.i, look_ahead.pop()
+            sentence_tokens.append(Token(i, sentence_bit))
             
             if self.sentence_end.match(sentence_bit) and \
                len(sentence_tokens) >= self.min_sentence:

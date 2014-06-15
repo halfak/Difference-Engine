@@ -1,7 +1,7 @@
 from nose.tools import eq_
 
 import re
-from ..segmenter import Token
+from ..segments import Token
 from ..paragraphs_sentences_and_whitespace import Paragraph, Sentence, \
                                                   Whitespace, \
                                                   ParagraphsSentencesAndWhitespace
@@ -46,4 +46,18 @@ def test_segment():
     )
     segments = segmenter.segment(tokens)
     
+    print(segments);print(expected)
     eq_(segments, expected)
+
+def test_equality():
+    eq_(Sentence([Token(0, "zero"), Token(1, "one")]),
+        Sentence([Token(10, "zero"), Token(11, "one")]))
+    eq_(Paragraph([
+            Sentence([Token(0, "zero"), Token(1, "one")]),
+            Sentence([Token(2, "two"), Token(3, "three")])
+        ]),
+        Paragraph([
+            Sentence([Token(10, "zero"), Token(11, "one")]),
+            Sentence([Token(12, "two"), Token(13, "three")])
+        ]),
+    )
