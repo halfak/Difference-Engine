@@ -138,10 +138,12 @@ datastores:
     mongo_local:
         host: localhost
         dbname: diffengine_local
+        w: 1
     
     mongo_local_dev:
         host: localhost
         dbname: diffengine_dev
+        w: 0
 
 
 logging:

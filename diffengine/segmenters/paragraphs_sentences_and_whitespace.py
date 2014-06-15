@@ -4,14 +4,36 @@ from .segments import Token, MatchableSegmentNodeCollection, \
                       MatchableTokenSequence, TokenSequence
 from ..util import LookAhead
 
-class Paragraph(MatchableSegmentNodeCollection):pass
+WHITESPACE_RE = re.compile("[\\r\\n\\t\\ ]+")
+PARAGRAPH_SPLIT_RE = re.compile("[\\t\\ \\r]*[\n][\\t\\ \\r]*[\n][\\t\\ \\r]*")
+SENTENCE_END_RE = re.compile("[.?!]+")
+MIN_SENTENCE_RE = 5
+
+class Paragraph(MatchableSegmentNodeCollection): pass
 class Sentence(MatchableTokenSequence):pass
 class Whitespace(TokenSequence):pass
 
 class ParagraphsSentencesAndWhitespace(Segmenter):
+    """
+    Constructs a segmenter that clusters text into :class:`Paragraph`,
+    :class:`Sentence` and :class:`Whitespace` segments.  Paragraphs and
+    sentences are matchable, while whitespace is not matchable.
     
-    def __init__(self, whitespace, paragraph_split, sentence_end, *,
-                       min_sentence=6):
+    :Parameters:
+        whitespace : :class:`SRE_Pattern`
+            A regular expression pattern that matches whitespace tokens.
+        paragraph_split : :class:`SRE_Pattern`
+            A regular expression pattern that matches paragraph delimiting
+            tokens.
+        sentence_end : :class:`SRE_Pattern`
+            A regular expression pattern that matches the end of paragraphs
+        min_sentence : int
+            The minimum sentence length before accepting a sentence_end token.
+    """
+    def __init__(self, *, whitespace=WHITESPACE_RE,
+                          paragraph_split=PARAGRAPH_SPLIT_RE,
+                          sentence_end=SENTENCE_END_RE,
+                          min_sentence=MIN_SENTENCE_RE):
         
         
         if not hasattr(whitespace, "match"):
@@ -36,7 +58,16 @@ class ParagraphsSentencesAndWhitespace(Segmenter):
         self.min_sentence = int(min_sentence)
     
     def segment(self, tokens):
+        """
+        Clusters a sequence of tokens into a list of segments.
         
+        :Parameters:
+            tokens : `iterable` of `str`
+                A series of tokens to segment.
+        
+        :Returns:
+            A `list` of :class:`Segment`
+        """
         self.look_ahead = LookAhead(tokens)
 
         segments = []

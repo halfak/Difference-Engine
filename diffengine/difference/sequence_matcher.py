@@ -1,7 +1,24 @@
+"""
+A simple wrapper around :class:`difflib.SequenceMatcher` that confirms to the
+:func:`diff` API.
+
+:Example:
+	>>> from diffengine.difference import sequence_matcher
+	>>>
+	>>> revisions = [
+	...     ['This', ' ', 'is', ' ', 'some', ' ', 'content', '.',    ' ', 'This', ' ', 'is',   ' ', 'going',   ' ', 'away', '.'],
+	...     ['This', ' ', 'is', ' ', 'some', ' ', 'content', '.',    ' ', 'This', ' ', 'is',   ' ', 'new',     '.'],
+	...     ['This', ' ', 'is', ' ', 'new ', '.', ' ',       'This', ' ', 'is',   ' ', 'some', ' ', 'content', '.']
+	... ]
+	>>> list(sequence_matcher.diff("", revisions[1]))
+	[Insert(start=0, end=15)]
+	>>> list(sequence_matcher.diff(revisions[1], revisions[2]))
+	[Insert(start=0, end=7), Persist(start=0, end=8), Remove(start=8, end=15)]
+"""
+
 from difflib import SequenceMatcher as SM
 
 from .ops import Insert, Persist, Remove
-
 
 def parse_replace(a, b, a1, a2, b1, b2):
 	yield Remove(a1, a2)

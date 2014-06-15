@@ -1,10 +1,33 @@
+"""
+Performs a diffs using a tree of matchable segments in order to remain robust
+to content moves.  This module supports the use of a custom
+:class:`~diffengine.segmenters.Segmenter`.
+
+:Example:
+    >>> from diffengine.difference import segment_matcher
+    >>>
+    >>> psw_segmenter = ParagraphsSentencesAndWhitespace()
+    >>> revisions = [
+    ...     ['This', ' ', 'is', ' ', 'some', ' ', 'content', '.',    ' ', 'This', ' ', 'is',   ' ', 'going',   ' ', 'away', '.'],
+    ...     ['This', ' ', 'is', ' ', 'some', ' ', 'content', '.',    ' ', 'This', ' ', 'is',   ' ', 'new',     '.'],
+    ...     ['This', ' ', 'is', ' ', 'new ', '.', ' ',       'This', ' ', 'is',   ' ', 'some', ' ', 'content', '.']
+    ... ]
+    >>> list(segment_matcher.diff("", revisions[1]))
+    [Insert(start=0, end=15)]
+    >>> list(segment_matcher.diff(revisions[1], revisions[2], psw_segmenter))
+    found match Sentence(['This', ' ', 'is', ' ', 'some', ' ', 'content', '.'])
+    [Remove(start=8, end=9), Persist(start=9, end=13), Remove(start=13, end=14), Insert(start=4, end=5), Persist(start=14, end=15), Insert(start=6, end=7), Persist(start=0, end=8)]
+
+"""
 from . import sequence_matcher
 from ..segmenters import Token, MatchableSegment, MatchableSegmentNode, \
-                         SegmentNodeCollection
+                         SegmentNodeCollection,
+                         ParagraphsSentencesAndWhitespace
 from .ops import Insert, Persist, Remove
 
+SEGMENTER = ParagraphsSentencesAndWhitespace()
 
-def diff(a, b, segmenter):
+def diff(a, b, segmenter=SEGMENTER):
     
     # Cluster the input tokens
     a_segments = segmenter.segment(a)
