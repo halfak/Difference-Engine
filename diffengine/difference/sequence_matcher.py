@@ -18,7 +18,7 @@ A simple wrapper around :class:`difflib.SequenceMatcher` that confirms to the
 
 from difflib import SequenceMatcher as SM
 
-from .ops import Insert, Persist, Remove
+from .operations import Insert, Persist, Remove
 
 def parse_replace(a, b, a1, a2, b1, b2):
 	yield Remove(a1, a2)

@@ -1,3 +1,4 @@
 from .apply import apply
-#from . import segment_matcher
+from .operations import Operation, Insert, Persist, Remove
+from . import segment_matcher
 from . import sequence_matcher

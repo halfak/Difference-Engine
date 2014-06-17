@@ -1,12 +1,12 @@
 from pymongo import MongoClient
 
-from ..difference import Persist, Insert, Remove
+from .types import Revision
 
 class Mongo(Datastore):
     
     def __init__(self, db):
         self.db = db
-        self.deltas = Deltas(self)
+        self.revisions = Revisions(self)
     
     
     @classmethod
@@ -24,69 +24,57 @@ class Mongo(Datastore):
         )
     
 
-class Deltas(Collection):
+class Revisions(Collection):
     
     def __init__(self, mongo):
         self.mongo = mongo
     
-    def _serialize_op(self, op, a, b):
-        if isinstance(op, Persist):
-            return {
-                'op': "=",
-                'a_start': op.start,
-                'a_end': op.end,
-                'b_start': offset,
-                'b_end': offset + (op.end - op.start)
-            }
-        elif isinstance(op, Insert):
-            return {
-                'op': "+",
-                'b_start': op.start,
-                'b_end': op.end,
-                'tokens': b[op.start, op.end]
-            }
-        elif isinstance(op, Remove):
-            return {
-                'op': "-",
-                'a_start': op.start,
-                'a_end': op.end,
-                'tokens': a[op.start, op.end]
-            }
-        else:
-            raise RuntimeError("Should never happen")
-        
+    @classmethod
+    def _mongoify(cls, doc):
+        doc['_id'] = doc['rev_id']
+        del doc['rev_id']
     
-    
-    def _serialize(self, delta):
-        return {
-            'rev_id': delta.rev_id,
-            'page_id': delta.page_id,
-            'ops': [_serialize_op(op) for op in ops]
-        }
-    
-    def store(self, rev_id, page_id, a, b, ops):
-        
-        doc = {
-            '_id': int(rev_id), # Indexed identifier
-            'page_id': int(page_id),
-            'ops': [_serialize_op(op, a, b) for op in ops
-        }
-        
-        self.mongo.db.deltas.save(_serialize(delta), w="1")
-    
-    def _deserialize(self, doc):
+    @classmethod
+    def _demongoify(cls, doc)
         doc['rev_id'] = doc['_id']
         del doc['_id']
-        return doc
     
-    def get(self, rev_ids):
+    def store(self, revision):
+        doc = revision.to_json()
         
-        docs = self.mongo.db.deltas.find({'_id': {'$in': rev_ids}})
+        self.mongo.db.revisions.save(self._mongoify(doc))
+    
+    def get(self, rev_ids, to_json=True):
+        
+        docs = self.mongo.db.revisions.find({'_id': {'$in': rev_ids}})
         
         for doc in docs:
-            yield self._deserialize(doc)
+            doc = self._demongoify(doc)
+            
+            if to_json:
+                yield doc
+            else:
+                yield Delta.from_json(doc)
+            
     
-    def query(self, page_id=None, after_id=None, before_id=None):
-        # TODO
-        pass
+    
+    def query(self, page_id=None, after_id=None, before_id=None, to_json=True):
+        
+        constraints = {}
+        if page_id != None:
+            constraints['page_id'] = int(page_id)
+        if after_id != None:
+            constraints['rev_id'] = {'&gt': int(after_id)}
+        if before_id != None:
+            constraints['rev_id'] = {'&lt': int(before_id)}
+        
+        docs = self.mongo.db.revisions.find(constraints)
+        
+        for doc in docs:
+            doc = self._demongoify(doc)
+            
+            if to_json:
+                yield doc
+            else:
+                yield Delta.from_json(doc)
         

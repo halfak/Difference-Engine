@@ -1,7 +1,7 @@
 from nose.tools import eq_
 
 from ..apply import apply
-from ..ops import Insert, Persist, Remove
+from ..operations import Insert, Persist, Remove
 
 
 def test_apply():
