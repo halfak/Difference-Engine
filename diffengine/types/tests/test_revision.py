@@ -3,11 +3,11 @@ from nose.tools import eq_
 from ..delta import Delta
 from ..operations import Insert, Persist, Remove
 from ..user import User
-from ..revision import Revision
+from ..revision import Revision, Timestamp
 
 def test_revision():
     rev_id = 10
-    timestamp = 1234567890
+    timestamp = Timestamp(1234567890)
     page_id = 12
     user = User(10, "foobar")
     delta = Delta("foobar_matcher", 55, 35, [Insert(0, 2, ["who", "?"])])

@@ -14,7 +14,7 @@ def propagate_defaults(doc):
         
     
     return doc
-        
+
 
 def merge_config(d, defaults):
     
@@ -24,9 +24,9 @@ def merge_config(d, defaults):
                 merge_config(d[key], defaults[key])
         else:
             d[key] = defaults[key]
-            
         
     
+
 def from_path(path):
     return from_file(open(path))
 
