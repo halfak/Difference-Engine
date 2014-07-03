@@ -44,7 +44,7 @@ class API(Synchronizer):
         
         # For each text, get the engine and update it
         for rev_doc in self._get_revisions(change_docs):
-            page_processor = self._get_cached_processor(rev_doc['pageid'])
+            processor = self._get_cached_processor(rev_doc['pageid'])
             text = rev_doc.get('*', "")
             
             revision = processor.process(rev_id, text)

@@ -1,15 +1,19 @@
-from .operations import Insert, Persist, Remove
+from ..types import Insert, Persist, Remove
 
 
-def apply(ops, a_tokens, b_tokens):
+def apply(operations, a_tokens):
     
-    for op in ops:
+    for operation in operations:
         
-        if isinstance(op, Persist):
-            yield from a_tokens[op.start:op.end]
+        if isinstance(operation, Persist):
+            yield from a_tokens[operation.start:operation.end]
         
-        elif isinstance(op, Insert):
-            yield from b_tokens[op.start:op.end]
+        elif isinstance(operation, Insert):
+            yield from operation.tokens
         
-        else: #isinstance(op, Remove):
+        elif isinstance(operation, Remove):
             pass
+        
+        else:
+            raise TypeError("Unexpected operation type " + \
+                            "{0}".format(type(operation)))

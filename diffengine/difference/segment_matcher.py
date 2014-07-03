@@ -23,7 +23,8 @@ from . import sequence_matcher
 from ..segmenters import Token, MatchableSegment, MatchableSegmentNode, \
                          SegmentNodeCollection, \
                          ParagraphsSentencesAndWhitespace
-from .operations import Insert, Persist, Remove
+
+from ..types.operations import Insert, Persist, Remove
 
 SEGMENTER = ParagraphsSentencesAndWhitespace()
 
@@ -69,7 +70,6 @@ def _match_segments(a_segment_map, b_segments):
             matched_segment = a_segment_map[segment]
             matched_segment.match = segment
             segment.match = matched_segment
-            print("found match {0}".format(matched_segment))
             yield segment # Dump matched segment
             
         elif isinstance(segment, SegmentNodeCollection):
@@ -118,7 +118,9 @@ def _expand_clustered_ops(ops, a_token_clusters, b_token_clusters):
                     inserted_tokens.append(token_or_segment)
                 else:
                     if len(inserted_tokens) > 0:
-                        yield Insert(inserted_tokens[0].start, inserted_tokens[-1].end)
+                        yield Insert(inserted_tokens[0].start,
+                                     inserted_tokens[-1].end,
+                                     [str(t) for t in inserted_tokens])
                     
                     matched_cluster = token_or_segment.match
                     yield Persist(matched_cluster.start, matched_cluster.end)
@@ -128,7 +130,9 @@ def _expand_clustered_ops(ops, a_token_clusters, b_token_clusters):
                 
             # Cleanup
             if len(inserted_tokens) > 0:
-                yield Insert(inserted_tokens[0].start, inserted_tokens[-1].end)
+                yield Insert(inserted_tokens[0].start,
+                             inserted_tokens[-1].end,
+                             [str(t) for t in inserted_tokens])
             
         elif isinstance(op, Remove):
             removed_tokens = []
@@ -138,14 +142,17 @@ def _expand_clustered_ops(ops, a_token_clusters, b_token_clusters):
                     removed_tokens.append(token_or_segment)
                 else: #Found a matched token... not removed -- just moved
                     if len(removed_tokens) > 0:
-                        yield Remove(removed_tokens[0].start, removed_tokens[-1].end)
+                        yield Remove(removed_tokens[0].start,
+                                     removed_tokens[-1].end,
+                                     [str(t) for t in removed_tokens])
                     
                     # reset!
                     removed_tokens = []
                 
             # Cleanup
             if len(removed_tokens) > 0:
-                yield Remove(removed_tokens[0].start, removed_tokens[-1].end)
+                yield Remove(removed_tokens[0].start, removed_tokens[-1].end,
+                             [str(t) for t in removed_tokens])
                 
         else:
             assert False, "Should never happen"

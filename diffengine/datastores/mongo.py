@@ -23,8 +23,7 @@ class Mongo(Datastore):
             w=config[datastores][key]['w']
         )
     
-
-class Revisions(Collection):
+class Collection:
     
     def __init__(self, mongo):
         self.mongo = mongo
@@ -39,28 +38,20 @@ class Revisions(Collection):
         doc['rev_id'] = doc['_id']
         del doc['_id']
     
+    
+class Revisions(Collection):
+    
     def store(self, revision):
         doc = revision.to_json()
         
         self.mongo.db.revisions.save(self._mongoify(doc))
     
-    def get(self, rev_ids, to_json=True):
-        
-        docs = self.mongo.db.revisions.find({'_id': {'$in': rev_ids}})
-        
-        for doc in docs:
-            doc = self._demongoify(doc)
-            
-            if to_json:
-                yield doc
-            else:
-                yield Delta.from_json(doc)
-            
-    
-    
-    def query(self, page_id=None, after_id=None, before_id=None, to_json=True):
+    def query(self, rev_ids=None, page_id=None, after_id=None, before_id=None,
+                    to_json=True):
         
         constraints = {}
+        if rev_ids != None:
+            constraints['rev_id'] = {'$in': rev_ids}
         if page_id != None:
             constraints['page_id'] = int(page_id)
         if after_id != None:
@@ -77,4 +68,25 @@ class Revisions(Collection):
                 yield doc
             else:
                 yield Delta.from_json(doc)
+        
+
+class SychronizerStatus(Collection):
+    
+    def store(self, status):
+        doc = status.to_json()
+        
+        self.mongo.db.synchronizer_status.store(self._mongoify(doc))
+    
+    def get(self, page_id): pass
+
+
+class EngineStatus(Collection):
+
+    def store(self, status):
+        doc = status.to_json()
+
+        self.mongo.db.synchronizer_status.store(self._mongoify(doc))
+
+    def get(self, page_id): pass
+        
         

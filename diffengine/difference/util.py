@@ -39,7 +39,7 @@ def test_diff_and_replay(diff):
     b_tokens = tokenizer.tokenize(b)
     delta = diff(a_tokens, b_tokens)
     
-    replay_b_tokens = list(str(t) for t in apply(delta, a_tokens, b_tokens))
+    replay_b_tokens = list(str(t) for t in apply(delta, a_tokens))
     
     print(b_tokens)
     print(replay_b_tokens)

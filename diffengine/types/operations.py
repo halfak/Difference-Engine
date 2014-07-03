@@ -1,4 +1,3 @@
-from .. import difference
 from .jsonable_type import JsonableType
 
 class Operation(JsonableType):

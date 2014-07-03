@@ -18,17 +18,17 @@ A simple wrapper around :class:`difflib.SequenceMatcher` that confirms to the
 
 from difflib import SequenceMatcher as SM
 
-from .operations import Insert, Persist, Remove
+from ..types import Insert, Persist, Remove
 
 def parse_replace(a, b, a1, a2, b1, b2):
-	yield Remove(a1, a2)
-	yield Insert(b1, b2)
+	yield Remove(a1, a2, a[a1:a2])
+	yield Insert(b1, b2, b[b1:b2])
 
 def parse_insert(a, b, a1, a2, b1, b2):
-	yield Insert(b1, b2)
+	yield Insert(b1, b2, b[b1:b2])
 
 def parse_delete(a, b, a1, a2, b1, b2):
-	yield Remove(a1, a2)
+	yield Remove(a1, a2, a[a1:a2])
 
 def parse_equal(a, b, a1, a2, b1, b2):
 	assert a2 - a1 == b2 - b1

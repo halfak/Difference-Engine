@@ -48,11 +48,11 @@ class JsonableType:
     
     def items(self):
         for key in self.keys():
-            yield key,getattr(self, key)
+            yield key, getattr(self, key)
     
     def keys(self):
-        return chain(*(getattr(cls, '__slots__', [])
-                       for cls in self.__class__.__mro__))
+        return set(chain(*(getattr(cls, '__slots__', [])
+                         for cls in self.__class__.__mro__)))
                               
     
     def to_json(self):
