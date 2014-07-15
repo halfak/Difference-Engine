@@ -1,7 +1,12 @@
+"""
+Roughly matches the operations from `deltas`, but includes tokens.
+"""
 from .jsonable_type import JsonableType
 
-class Operation(JsonableType):
+class ContentOperation(JsonableType):
+    
     __slots__ = ("start", "end")
+    
     OP = NotImplemented
     OPERATIONS = {}
     

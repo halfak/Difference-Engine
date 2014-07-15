@@ -3,8 +3,16 @@
 
 Diff functionality officially split out.  See http://github.org/halfak/deltas
 Woot.  OK.  So my plan for today is to start removing the diff functionality
-from this project and including it as a dependency. 
+from this project and including it as a dependency.
 
+First, I need to go to conf.yaml to structure it to represent the imports from
+deltas. ... {{done}}
+
+Next I need to trim out the modules we won't be using anymore.
+
+... bah!  Ran out of time thinking about how I'd adjust the "Operation" type
+now that the difference algorithms have been removed.  I'll have to come back to
+that next time. 
 
 2014-07-03
 ==========

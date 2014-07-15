@@ -102,7 +102,7 @@ engines:
     defaults: {}
     
     western_segment_matcher:
-        class: diffengine.engines.HierarchicalSegmentMatcher
+        class: diffengine.engines.SegmentMatcher
         segmenter: western_segmenter
     
     block_matcher:
@@ -124,7 +124,7 @@ segmenters:
         tokenizer: wikitext_split
     
     western_segmenter:
-        class: diffengine.tokenizers.ParagraphSentencesAndWhitespace
+        class: deltas.segmenters.ParagraphSentencesAndWhitespace
         min_segment: 5
         whitespace: "[\\r\\n\\t\\ ]+"
         paragraph_split: "[\\t\\ \\r]*[\n][\\t\\ \\r]*[\n][\\t\\ \\r]*"

@@ -20,7 +20,7 @@ setup(
 	url = "https://github.com/halfak/Difference-Engine",
 	py_modules = ['diffengine'],
 	long_description = read('README.rst'),
-	install_requires = [],
+	install_requires = requirements('requirements.txt'),
 	classifiers=[
 		"Development Status :: 2 - Pre-Alpha",
 		"License :: OSI Approved :: MIT License",
