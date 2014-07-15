@@ -1,3 +1,10 @@
+2014-07-14
+==========
+
+Diff functionality officially split out.  See http://github.org/halfak/deltas
+Woot.  OK.  So my plan for today is to start removing the diff functionality
+from this project and including it as a dependency. 
+
 
 2014-07-03
 ==========
@@ -15,7 +22,7 @@ On the other hand, I could just not have a config directive in the difference
 algorithms or segmenters and simply extend the segmenters in order to provide
 a from_config class method.  What do you think rubber ducky?
 
-Now practically, I could delay this design change.  That would help me keep 
+Now practically, I could delay this design change.  That would help me keep
 pushing toward getting the diffengine online.  On the other hand, I'd be racking
 up some technical debt.  Presumably, I'd need to spend more time fixing this later
 than right now, so from a utilitarian sense, I should probably do it right now.
@@ -24,7 +31,7 @@ to present an MVP of the whole persistence project at Wikimedia.  A quick check
 of the calendar puts that at less than 1 month away.  Eek.
 
 OK.  So it isn't bad to waste a couple of hours exploring how difficult it is
-to decouple these libraries
+to decouple these libraries.
 
 2014-06-29
 ==========
