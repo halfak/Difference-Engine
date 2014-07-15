@@ -10,3 +10,4 @@ class Delta(JsonableType):
         self.chars = int(chars)
         self.operations = [Operation(op) for op in operations]
     
+    

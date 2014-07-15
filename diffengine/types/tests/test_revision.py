@@ -1,7 +1,7 @@
 from nose.tools import eq_
 
 from ..delta import Delta
-from ..operations import Insert, Persist, Remove
+from ..operations import Insert, Equal, Delete
 from ..user import User
 from ..revision import Revision, Timestamp
 
@@ -10,7 +10,7 @@ def test_revision():
     timestamp = Timestamp(1234567890)
     page_id = 12
     user = User(10, "foobar")
-    delta = Delta("foobar_matcher", 55, 35, [Insert(0, 2, ["who", "?"])])
+    delta = Delta("foobar_matcher", 55, 35, [Insert(0, 2, 0, 2, ["who", "?"])])
     
     revision = Revision(rev_id, timestamp, page_id, user, delta)
     

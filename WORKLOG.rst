@@ -1,3 +1,11 @@
+2014-07-15
+==========
+Trying to cram in a little bit of work in the morning before the rest of the
+world wakes up.  My goal today is to finish up the operations stuff.
+
+... so.  I gave up on my inheritance scheme.  Operations are going to be
+their own thing within the diffengine.
+
 2014-07-14
 ==========
 
@@ -12,7 +20,7 @@ Next I need to trim out the modules we won't be using anymore.
 
 ... bah!  Ran out of time thinking about how I'd adjust the "Operation" type
 now that the difference algorithms have been removed.  I'll have to come back to
-that next time. 
+that next time.
 
 2014-07-03
 ==========

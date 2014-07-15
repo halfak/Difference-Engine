@@ -8,5 +8,3 @@ class Processor(JsonableType):
         self.last_rev_id = int(last_id)
     
     def process(self, rev_id, text): raise NotImplementedError()
-    
-    

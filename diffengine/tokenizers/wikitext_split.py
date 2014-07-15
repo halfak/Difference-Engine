@@ -1,8 +1,8 @@
 import re
 
-from .tokenizer import Tokenizer
+import deltas
 
-class WikitextSplit(Tokenizer):
+class WikitextSplit(deltas.Tokenizer):
 	
 	def tokenize(self, text):
 		return re.findall(
