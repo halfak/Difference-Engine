@@ -12,11 +12,11 @@ def test_operation_with_tokens():
     assert isinstance(insert, Operation)
     assert isinstance(insert, OperationWithTokens)
     
-    print(insert)
+    
     eq_(insert.a1, a1)
     eq_(insert.a2, a2)
     eq_(insert.b1, b1)
     eq_(insert.b2, b2)
     eq_(insert.tokens, tokens)
-
-    eq_(insert, OperationWithTokens(insert.to_json()))
+    
+    eq_(insert, Operation(insert.to_json()))

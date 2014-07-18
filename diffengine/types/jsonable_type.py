@@ -60,7 +60,7 @@ class JsonableType:
     
     @classmethod
     def _to_json(cls, value):
-        print(value)
+        
         if type(value) in JSON_TYPES:
             return value
         elif hasattr(value, "to_json"):

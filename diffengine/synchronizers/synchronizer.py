@@ -1,4 +1,5 @@
 
+
 class Synchronizer(Thread):
     
     def __init__(self, status, wiki, engine, tokenizer, datastore):

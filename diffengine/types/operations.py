@@ -1,6 +1,6 @@
 """
 Roughly matches the operations from `deltas`, but includes tokens in the case of
-insert and delete. TODO
+insert and delete.
 
 .. role:: python(code)
    :language: python
@@ -9,44 +9,24 @@ insert and delete. TODO
     :python:`Insert(0, 6, 0, 6, tokens=["Foo", " ", "bar", " ", "herp", " ", "derp"])`:
         .. code-block:: python
         
-            {
-                "opname": "insert",
-                "a1": 0,
-                "a2": 6,
-                "b1": 0,
-                "b2": 6
-                "tokens": ["Foo", " ", "bar", " ", "herp", " ", "derp"]
-            }
+            {"insert": [0, 6, 0, 6, ["Foo", " ", "bar", " ", "herp", " ", "derp"]}
     
     :python:`Delete(0, 6, 0, 0, tokens=["Foo", " ", "bar", " ", "herp", " ", "derp"])`:
         .. code-block:: python
         
-            {
-                "opname": "delete",
-                "a1": 0,
-                "a2": 6,
-                "b1": 0,
-                "b2": 0
-                "tokens": ["Foo", " ", "bar", " ", "herp", " ", "derp"]
-            }
+            {"delete": [0, 6, 0, 0, ["Foo", " ", "bar", " ", "herp", " ", "derp"]}
     
     :python:`Equal(0, 6, 0, 6)`:
         .. code-block:: python
         
-            {
-                "opname": "equal",
-                "a1": 0,
-                "a2": 6,
-                "b1": 0,
-                "b2": 6
-            }
+            {"equal": [0, 6, 0, 6]}
 """
 from .jsonable_type import JsonableType
 import deltas
 
 
 class Operation(JsonableType):
-    __slots__ = ('a1', 'a2', 'a3', 'a4')
+    __slots__ = ('a1', 'a2', 'b1', 'b2')
     
     OPERATIONS = {}
     OP = NotImplemented
@@ -58,13 +38,13 @@ class Operation(JsonableType):
         self.b2 = int(b2)
     
     def to_json(self):
-        doc = JsonableType.to_json(self)
-        doc['op'] = self.OP
+        doc = {self.OP: [self.a1, self.a2, self.b1, self.b2]}
+        return doc
     
     @classmethod
     def from_json(cls, doc):
-        op = doc['op']
-        return cls.get(op)(**doc)
+        op = list(doc.keys())[0]
+        return cls.get(op)(*doc[op])
     
     @classmethod
     def register(cls, operation):
@@ -83,10 +63,14 @@ class OperationWithTokens(Operation):
     
     __slots__ = ('tokens', )
     
-    def initiate(self, *args, tokens):
-        super().__init__(*args)
+    def initiate(self, a1, a2, b1, b2, tokens):
+        super().initiate(a1, a2, b1, b2)
         self.tokens = tokens
     
+    def to_json(self):
+        doc = super().to_json()
+        doc[self.OP].append(self.tokens)
+        return doc
 
 class Insert(OperationWithTokens):
     

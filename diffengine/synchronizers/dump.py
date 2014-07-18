@@ -2,12 +2,12 @@ from mw.xml_dump import map
 
 class XMLDump(Synchronizer):
     
-    def __init__(self, status, wiki, engine, tokenizer,
+    def __init__(self, sync_status, wiki, engine, tokenizer,
                        paths, threads, force=False):
         
-        super().__init__(status, wiki, engine, tokenizer, datastore)
+        super().__init__(sync_status, wiki, engine, tokenizer, datastore)
         
-        self.status.stats['touched'] = time.time()
+        self.sync_status.stats['touched'] = time.time()
         
     
     def run(self):
@@ -25,10 +25,10 @@ class XMLDump(Synchronizer):
                 max_rev_id = max(revision.rev_id, max_rev_id or 0)
                 max_timestamp = max(revision.timestamp, max_timestamp or 0)
                 
-            elif isinstance(revision_processor_or_dump, ProcessorStatus):
-                processor_status = revision_processor_or_dump
+            elif isinstance(revision_processor_or_dump, Processor):
+                processor = revision_processor_or_dump
                 
-                self.datastore.processor_status.store(processor_status)
+                self.datastore.processor.store(processor)
                 
                 logging.info("Completed processing page " + \
                              "{0}".format(processor_status.page_id))
@@ -43,10 +43,10 @@ class XMLDump(Synchronizer):
                         "Did not expect a " + \
                         "{0}".format(type(revision_processor_or_dump)))
         
-        self.status.state['last_revision_id'] = max_rev_id
-        self.status.state['max_timestamp'] = max_timestamp
+        self.sync_status.state['last_revision_id'] = max_rev_id
+        self.sync_status.state['max_timestamp'] = max_timestamp
         
-        self.sync_status()
+        self.store_status()
     
     
     def _process_dump(self, dump):
@@ -62,7 +62,7 @@ class XMLDump(Synchronizer):
                     
                 
             
-            yield processor.status
+            yield processor
         
         yield dump
         
