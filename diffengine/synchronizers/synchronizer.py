@@ -24,7 +24,6 @@ class Synchronizer(Thread):
     
     def sync_status(self):
         self.datastore.synchonizer_status.store(self.status)
-        self.datastore.processor_status.sync()
 
     def _get_processor(self, page_id):
 

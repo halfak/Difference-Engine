@@ -2,10 +2,10 @@ from mw.xml_dump import map
 
 class XMLDump(Synchronizer):
     
-    def __init__(self, sync_status, wiki, engine, tokenizer,
+    def __init__(self, sync_status, wiki, engine, datastore,
                        paths, threads, force=False):
         
-        super().__init__(sync_status, wiki, engine, tokenizer, datastore)
+        super().__init__(sync_status, wiki, engine, datastore)
         
         self.sync_status.stats['touched'] = time.time()
         
@@ -22,6 +22,7 @@ class XMLDump(Synchronizer):
                 
                 self.datastore.revisions.store(revision)
                 self.status.stats['revisions_processed'] += 1
+                
                 max_rev_id = max(revision.rev_id, max_rev_id or 0)
                 max_timestamp = max(revision.timestamp, max_timestamp or 0)
                 
@@ -43,8 +44,7 @@ class XMLDump(Synchronizer):
                         "Did not expect a " + \
                         "{0}".format(type(revision_processor_or_dump)))
         
-        self.sync_status.state['last_revision_id'] = max_rev_id
-        self.sync_status.state['max_timestamp'] = max_timestamp
+        self.sync_status.last_rev_id = rev_id
         
         self.store_status()
     

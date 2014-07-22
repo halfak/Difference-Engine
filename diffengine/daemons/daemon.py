@@ -1,6 +1,4 @@
-
-
-class Server:
+class Daemon:
     
     def __init__(self, name):
         self.name = str(name)

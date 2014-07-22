@@ -1,5 +1,22 @@
+2014-07-22
+==========
+
+I'm in war mode.  I want this system operational for Wikimania.  I've given up
+on the possibility of having an MVP for Wikimania, but I'm going to get far.
+Right now, this biggest problem that I am dealing with is status maintenance.
+I need to be able to store the status of the system in a nuanced way, but I
+don't want to store any logic in the datastore.  That means I need to store
+separate state objects.  Right now, I see two good examples of state objects
+to store.
+
+* SynchronizerState -- Represents the state of the entire set of diffs for a
+    MediaWiki installation.
+* EngineState -- Represents the status of a single page.  An "engine" is
+    something that takes a new "text" and produces a new "delta".
+
 2014-07-15
 ==========
+
 Trying to cram in a little bit of work in the morning before the rest of the
 world wakes up.  My goal today is to finish up the operations stuff.
 

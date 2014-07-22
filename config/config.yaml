@@ -4,11 +4,11 @@ maintainer:
 
 root_dir: /home/halfak/projects/diffengine
 
-servers:
+daemons:
     defaults: {}
     
     development:
-        class: diffengine.server.WebAndSync
+        class: diffengine.daemons.WebAndSync
         name: Difference Engine (development)
         datastore: mongo_local_dev
         synchronizers:
@@ -17,7 +17,7 @@ servers:
         logging: development
     
     production:
-        class: diffengine.server.WebAndSync
+        class: diffengine.daemons.WebAndSync
         name: Difference Engine (production)
         datastore: mongo_local
         synchronizers:
@@ -104,10 +104,6 @@ engines:
     western_segment_matcher:
         class: diffengine.engines.SegmentMatcher
         segmenter: western_segmenter
-    
-    block_matcher:
-        class: diffengine.engines.BlockMatcher
-        tokenizer: wikitext_split
     
     sequence_matcher:
         class: diffengine.engines.SequenceMatcher

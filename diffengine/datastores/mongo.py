@@ -80,13 +80,13 @@ class SychronizerStatus(Collection):
     def get(self, page_id): pass
 
 
-class EngineStatus(Collection):
+class Processor(Collection):
 
     def store(self, status):
         doc = status.to_json()
 
         self.mongo.db.synchronizer_status.store(self._mongoify(doc))
 
-    def get(self, page_id): pass
+    def get(self, page_id, ):
         
         

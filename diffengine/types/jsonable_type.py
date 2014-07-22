@@ -1,36 +1,22 @@
-import inspect
-from itertools import chain
+from .. import util
 
 JSON_TYPES = {str, int, float}
 
-class JsonableType:
+class JsonableType(util.SelfConstructor):
     def __new__(cls, *args, **kwargs):
-        if len(args) == 1 and len(kwargs) == 0:
-            if isinstance(args[0], cls):
-                inst = args[0]
-            elif isinstance(args[0], dict):
-                inst = cls.from_json(args[0])
-            else:
-                inst = super().__new__(cls)
-                inst.initiate(args[0])
+        if len(args) == 1 and len(kwargs) == 0 and isinstance(args[0], dict):
+            return cls.from_json(args[0])
         else:
-            inst = super().__new__(cls)
-            inst.initiate(*args, **kwargs)
-        
-        return inst
-    
-    def __init__(self, *args, **kwargs): pass
-    
-    def initiate(self, *args, **kwargs): raise NotImplementedError()
+            return super().__new__(cls, *args, **kwargs)
     
     def __eq__(self, other):
         if other == None: return False
         try:
-            for key in self.keys():
+            for key in util.instance.keys(self):
                     if getattr(self, key) != getattr(other, key): return False
             
             return True
-        except KeyError:
+        except KeyError or AttributeError:
             return False
         
     def __neq__(self, other):
@@ -39,24 +25,10 @@ class JsonableType:
     def __str__(self): return self.__repr__()
     
     def __repr__(self):
-        return "%s(%s)" % (
-            self.__class__.__name__,
-            ", ".join(
-                "%s=%r" % (k, v) for k, v in self.items()
-            )
-        )
-    
-    def items(self):
-        for key in self.keys():
-            yield key, getattr(self, key)
-    
-    def keys(self):
-        return set(chain(*(getattr(cls, '__slots__', [])
-                         for cls in self.__class__.__mro__)))
-                              
+        return util.instance.repr(self)
     
     def to_json(self):
-        return {k:self._to_json(v) for k, v in self.items()}
+        return {k:self._to_json(v) for k, v in util.instance.items(self)}
     
     @classmethod
     def _to_json(cls, value):

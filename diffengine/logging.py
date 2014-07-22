@@ -1,5 +1,5 @@
 from logging import logging
 
-def load_config(config, name):
+def load_config(config):
     
     logging.config.dictConfig(config[name])
