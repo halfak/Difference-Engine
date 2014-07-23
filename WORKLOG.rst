@@ -13,6 +13,14 @@ to store.
     MediaWiki installation.
 * EngineState -- Represents the status of a single page.  An "engine" is
     something that takes a new "text" and produces a new "delta".
+    
+----
+
+OK.  Got a lot done today.  All types are tested.  I got the SequenceMatcher
+"engine" running.  However, I think I want to restructure the config/system
+structure so that one wiki == one engine.  I'll need to rename the
+SequenceMatcher "engine" to "processor" or something equivalent.  That's all for
+today.
 
 2014-07-15
 ==========

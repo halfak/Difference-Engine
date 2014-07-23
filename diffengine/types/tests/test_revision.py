@@ -10,14 +10,16 @@ def test_revision():
     timestamp = Timestamp(1234567890)
     page_id = 12
     user = User(10, "foobar")
-    delta = Delta(55, 35, [Insert(0, 2, 0, 2, ["who", "?"])])
+    delta = Delta("deltas.detection.bozo", 55, 35,
+                  [Insert(0, 2, 0, 2, ["who", "?"])])
     
     revision = Revision(rev_id, timestamp, page_id, user, delta)
     
-    r2 = Revision(revision.to_json())
-    eq_(revision, r2)
-    eq_(r2.rev_id, rev_id)
-    eq_(r2.timestamp, timestamp)
-    eq_(r2.page_id, page_id)
-    eq_(r2.user, user)
-    eq_(r2.delta, delta)
+    eq_(revision.rev_id, rev_id)
+    eq_(revision.timestamp, timestamp)
+    eq_(revision.page_id, page_id)
+    eq_(revision.user, user)
+    eq_(revision.delta, delta)
+    
+    print(revision.to_json())
+    eq_(revision, Revision(revision.to_json()))

@@ -56,8 +56,12 @@ class Operation(JsonableType):
     
     @classmethod
     def from_delta_op(cls, delta_op, a, b):
-        OperationClass = cls.get(operation.opname)
-        return OperationClass.from_delta_op(operation, a, b)
+        if delta_op[0] == 'equal':
+            return Equal.from_delta_op(delta_op, a, b)
+        if delta_op[0] == 'insert':
+            return Insert.from_delta_op(delta_op, a, b)
+        if delta_op[0] == 'delete':
+            return Delete.from_delta_op(delta_op, a, b)
     
 class OperationWithTokens(Operation):
     
@@ -76,9 +80,12 @@ class Insert(OperationWithTokens):
     
     OP = "+"
     
+    def to_delta_op(self):
+        return deltas.Insert(self.a1, self.a2, self.b1, self.b2)
+    
     @classmethod
     def from_delta_op(cls, delta_op, a, b):
-        return cls(*delta_op, tokens=b[delta_op.b1:delta_op.b2])
+        return cls(*delta_op[1:], tokens=b[delta_op.b1:delta_op.b2])
     
 Operation.register(Insert)
 
@@ -86,9 +93,12 @@ class Equal(Operation):
     
     OP = "="
     
+    def to_delta_op(self):
+        return deltas.Equal(self.a1, self.a2, self.b1, self.b2)
+    
     @classmethod
     def from_delta_op(cls, delta_op, a, b):
-        return cls(*delta_op, tokens=b[delta_op.b1:delta_op.b2])
+        return cls(*delta_op[1:])
 
 Operation.register(Equal)
 
@@ -96,8 +106,11 @@ class Delete(OperationWithTokens):
     
     OP = "-"
     
+    def to_delta_op(self):
+        return deltas.Delete(self.a1, self.a2, self.b1, self.b2)
+    
     @classmethod
     def from_delta_op(cls, delta_op, a, b):
-        return cls(*delta_op, tokens=a[delta_op.a1:delta_op.a2])
+        return cls(*delta_op[1:], tokens=a[delta_op.a1:delta_op.a2])
 
 Operation.register(Delete)

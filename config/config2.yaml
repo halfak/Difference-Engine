@@ -1,0 +1,182 @@
+maintainer:
+    name: Aaron Halfaker
+    email: aaron.halfaker@gmail.com
+
+root_dir: /home/halfak/projects/diffengine
+
+daemons:
+    defaults: {}
+    
+    development:
+        class: diffengine.daemons.WebAndSync
+        engines:
+            - testwiki
+        web: development
+        logging: development
+    
+    production:
+        class: diffengine.daemons.WebAndSync
+        engines:
+            - enwiki
+            - bgwiki
+        web: production
+        logging: production
+    
+
+engines:
+    defaults:
+        class: diffengine.Engine
+    
+    testwiki:
+        datastore: mongo_local_testwiki
+        wiki: testwiki
+    
+    enwiki:
+        datastore: mongo_local_enwiki
+        wiki: enwiki
+    
+
+web:
+    defaults: {}
+        
+    development:
+        domain: diffengine.localhost.org
+        port: 8081
+        
+    production:
+        domain: diffengine.wmflabs.org
+        port: 80
+
+synchronizer:
+    defaults:
+        class: diffengine.synchronizers.APISync
+        max_wait: 5 # seconds
+        engine: western_segment_matcher
+    
+    bgwiki:
+        wiki: bgwiki
+    
+    enwiki:
+        wiki: enwiki
+    
+    frwiki:
+        wiki: frwiki
+    
+    ptwiki:
+        wiki: ptwiki
+    
+    itwiki:
+        wiki: itwiki
+    
+    testwiki:
+        wiki: testwiki
+    
+wikis:
+    defaults:
+        protocol: https
+        port: 443
+        paths:
+            pages: /wiki/
+            scripts: /w/
+        scripts:
+            index: index.php
+            api: api.php
+    
+    bgwiki:
+        domain: bg.wikipedia.org
+    
+    dewiki:
+        domain: de.wikipedia.org
+    
+    enwiki:
+        domain: en.wikipedia.org
+    
+    frwiki:
+        domain: fr.wikipedia.org
+    
+    itwiki:
+        domain: it.wikipedia.org
+    
+    metawiki:
+        domain: meta.wikimedia.org
+    
+    testwiki:
+        protocol: http
+        domain: localhost
+        port: 8080
+
+engines:
+    defaults: {}
+    
+    western_segment_matcher:
+        class: diffengine.engines.SegmentMatcher
+        segmenter: western_segmenter
+    
+    sequence_matcher:
+        class: diffengine.engines.SequenceMatcher
+        tokenizer: wikitext_split
+
+tokenizers:
+    defaults: {}
+    
+    wikitext_split:
+        class: diffengine.tokenizers.WikitextSplit
+
+segmenters:
+    defaults:
+        tokenizer: wikitext_split
+    
+    western_segmenter:
+        class: deltas.segmenters.ParagraphSentencesAndWhitespace
+        min_segment: 5
+        whitespace: "[\\r\\n\\t\\ ]+"
+        paragraph_split: "[\\t\\ \\r]*[\n][\\t\\ \\r]*[\n][\\t\\ \\r]*"
+        sentence_end: "[.?!]+"
+
+datastores:
+    defaults:
+        class: diffengine.datastore.Mongo
+        port: 27017
+        
+    mongo_local:
+        host: localhost
+        dbname: diffengine_local
+        w: 1
+    
+    mongo_local_dev:
+        host: localhost
+        dbname: diffengine_dev
+        w: 0
+
+
+logging:
+    defaults:
+        formatters:
+            human:
+                format: '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
+                datefmt: '%Y-%m-%d %H:%M:%S'
+            json:
+                class: jsonlogger.JsonFormatter
+        handlers:
+            std_err:
+                class: logging.handlers.StreamHandler
+                formatter: human
+                stream  : ext://sys.stdout
+            var_log:
+                class: logging.handlers.RotatingFileHandler
+                formatter: json
+                level: ERROR
+                filename: /var/log/diffengine/error.json
+                maxBytes: 1048576
+                backupCount: 5
+    
+    development:
+        loggers:
+            main:
+                handlers: [std_err]
+    production:
+        loggers:
+            main:
+                handlers: [var_log]
+              
+    

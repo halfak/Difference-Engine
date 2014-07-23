@@ -1,60 +1,51 @@
 from deltas import segment_matcher, Segmenter
 
-from . import defaults
-from .. import operations
-from .jsonable_type import JsonableType
+from ..types import Operation, EngineStatus, Delta
+from .engine import Engine
 
+class SegmentMatcherStatus(EngineStatus):
+    
+    def initiate(self, last_rev_id, last_tokens=None, **kwargs):
+        super().initiate(last_rev_id, **kwargs)
+        
+        self.last_tokens = last_tokens or []
+    
+    def update(self, rev_id, timestamp, tokens):
+        super().update(rev_id, timestamp)
+        self.last_tokens = tokens
+    
 
-class SegmentMatcherProcessor(Processor):
+class SegmentMatcher(Engine):
     
-    def __init__(self, tokenizer, segmenter):
-        self.tokenizer   = tokenizer
-        self.segmenter   = segmenter
-    
-    def process(self, rev_id, new_text):
-        new_tokens = self.tokenizer.tokenize(text)
-        
-        deltas_ops = segment_matcher.diff(
-            self.last_tokens,
-            new_tokens,
-            segmenter = self.segmenter
-        )
-        operations = list(Operation.from_delta_op(deltas_ops, self.last_tokens
-                                                              new_tokens))
-        
-        
-        old_text = "".join(self.last_tokens)
-        
-        chars = len(new_text) - len(old_text)
-        bytes = len(bytes(new_text, 'utf-8', 'replace')) -
-                len(bytes(old_text, 'utf-8', 'replace'))
-        
-        return Delta(chars, bytes, operations)
-
-class SegmentMatcherEngine(DifferenceEngine):
-    
-    def __init__(self, tokenizer, segmenter):
+    def __init__(self, status, tokenizer, segmenter):
+        self.status    = SegmentMatcherStatus(status)
         self.tokenizer = tokenizer
         self.segmenter = segmenter
+        
+        self.last_text = "".join(self.status.last_tokens)
     
-    def process(self, last_tokens, new_text):
-        new_tokens = self.tokenizer.tokenize(text)
+    def process(self, rev_id, timestamp, new_text):
+        if rev_id < self.status.last_rev_id:
+            raise RevisionOrderError(self.status.last_rev_id, rev_id)
+        
+        new_tokens = self.tokenizer.tokenize(new_text)
         
         deltas_ops = segment_matcher.diff(
-            self.last_tokens,
+            self.status.last_tokens,
             new_tokens,
             segmenter = self.segmenter
         )
-        operations = list(Operation.from_delta_op(deltas_ops, self.last_tokens
-                                                              new_tokens))
+        operations = [Operation.from_delta_op(op, self.status.last_tokens,
+                                              new_tokens)
+                      for op in deltas_ops]
         
+        char_diff = len(new_text) - len(self.last_text)
+        byte_diff = len(bytes(new_text, 'utf-8', 'replace')) - \
+                    len(bytes(self.last_text, 'utf-8', 'replace'))
         
-        old_text = "".join(self.last_tokens)
+        delta = Delta(segment_matcher.__name__, char_diff, byte_diff, operations)
         
-        chars = len(new_text) - len(old_text)
-        bytes = len(bytes(new_text, 'utf-8', 'replace')) -
-                len(bytes(old_text, 'utf-8', 'replace'))
-        
-        return Delta(chars, bytes, operations)
+        self.status.update(rev_id, timestamp, new_tokens)
+        self.last_text = new_text
         
         return delta
