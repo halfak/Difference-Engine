@@ -5,7 +5,7 @@ from .engine import Engine
 
 class SegmentMatcherStatus(EngineStatus):
     
-    def initiate(self, last_rev_id, last_tokens=None, **kwargs):
+    def initiate(self, last_rev_id=0, last_tokens=None, **kwargs):
         super().initiate(last_rev_id, **kwargs)
         
         self.last_tokens = last_tokens or []
@@ -17,8 +17,14 @@ class SegmentMatcherStatus(EngineStatus):
 
 class SegmentMatcher(Engine):
     
-    def __init__(self, status, tokenizer, segmenter):
-        self.status    = SegmentMatcherStatus(status)
+    def __init__(self, tokenizer, segmenter, status=None):
+        
+        if status is None:
+            logger.warning("Starting up with a brand new synchronizer.")
+            self.status = SegmentMatcherStatus()
+        else:
+            self.status = SegmentMatcherStatus(status)
+        
         self.tokenizer = tokenizer
         self.segmenter = segmenter
         

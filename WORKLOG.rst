@@ -1,3 +1,8 @@
+2014-07-23
+==========
+
+Time to figure out database structure.
+
 2014-07-22
 ==========
 
@@ -13,7 +18,7 @@ to store.
     MediaWiki installation.
 * EngineState -- Represents the status of a single page.  An "engine" is
     something that takes a new "text" and produces a new "delta".
-    
+
 ----
 
 OK.  Got a lot done today.  All types are tested.  I got the SequenceMatcher

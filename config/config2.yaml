@@ -2,75 +2,94 @@ maintainer:
     name: Aaron Halfaker
     email: aaron.halfaker@gmail.com
 
-root_dir: /home/halfak/projects/diffengine
+root_dir: /diffengine
 
 daemons:
     defaults: {}
     
-    development:
-        class: diffengine.daemons.WebAndSync
-        engines:
-            - testwiki
-        web: development
+    simplewiki (dev):
+        class: diffengine.daemons.Syncronizer
+        synchronizers:
+            - simplewiki_local
         logging: development
     
-    production:
-        class: diffengine.daemons.WebAndSync
-        engines:
-            - enwiki
-            - bgwiki
+    enwiki:
+        class: diffengine.daemons.WebServerAndSynchronizer
+        synchronizers:
+            - enwiki_local
         web: production
         logging: production
+
+
+synchronizers:
+    defaults: {}
     
+    simplewiki_local:
+        class: diffengine.synchronizers.Changes
+        source: simplewiki_api
+        engine: simplewiki_local
 
 engines:
-    defaults:
-        class: diffengine.Engine
-    
-    testwiki:
-        datastore: mongo_local_testwiki
-        wiki: testwiki
-    
-    enwiki:
-        datastore: mongo_local_enwiki
-        wiki: enwiki
-    
-
-web:
     defaults: {}
-        
-    development:
-        domain: diffengine.localhost.org
-        port: 8081
-        
-    production:
-        domain: diffengine.wmflabs.org
-        port: 80
-
-synchronizer:
-    defaults:
-        class: diffengine.synchronizers.APISync
-        max_wait: 5 # seconds
-        engine: western_segment_matcher
     
-    bgwiki:
-        wiki: bgwiki
+    simplewiki_local:
+        class: diffengine.engines.SegmentMatcher
+        wiki: simplewiki
+        store: simplewiki_local
+        segmenter: western_psw
+        tokenizer: wikitext_split
     
-    enwiki:
+    enwiki_local:
+        class: diffengine.engines.SegmentMatcher
         wiki: enwiki
+        store: enwiki_local
+        segmenter: western_psw
+        tokenizer: wikitext_split
+
+
+webservers:
+    defaults:
+        class: diffengine.webservers.DiffAPI
+        port: 80
     
-    frwiki:
-        wiki: frwiki
+    simplewiki_diffapi_dev:
+        store: simplewiki_local
+        domain: diffengine.localhost.org
+        root: /simplewiki/
+        
+    enwiki_diffapi:
+        store: enwiki_local
+        domain: diffengine.wmflabs.org
+        root: /enwiki/
+
+sources:
+    defaults: {}
     
-    ptwiki:
-        wiki: ptwiki
-    
-    itwiki:
-        wiki: itwiki
-    
-    testwiki:
+    simplewiki_api:
+        class: diffengine.sources.API
         wiki: testwiki
+        max_wait: 10
     
+    enwiki_api:
+        class: diffengine.sources.API
+        wiki: enwiki
+        max_wait: 5
+
+stores:
+    defaults: {}
+    
+    simplewiki_local:
+        class: diffengine.store.Mongo
+        host: localhost
+        database: simplewiki
+    
+
+    enwiki_local:
+        class: diffengine.store.Mongo
+        host: localhost
+        database: enwiki
+    
+
 wikis:
     defaults:
         protocol: https
@@ -82,39 +101,11 @@ wikis:
             index: index.php
             api: api.php
     
-    bgwiki:
-        domain: bg.wikipedia.org
-    
-    dewiki:
-        domain: de.wikipedia.org
-    
     enwiki:
         domain: en.wikipedia.org
-    
-    frwiki:
-        domain: fr.wikipedia.org
-    
-    itwiki:
-        domain: it.wikipedia.org
-    
-    metawiki:
-        domain: meta.wikimedia.org
-    
-    testwiki:
-        protocol: http
-        domain: localhost
-        port: 8080
-
-engines:
-    defaults: {}
-    
-    western_segment_matcher:
-        class: diffengine.engines.SegmentMatcher
-        segmenter: western_segmenter
-    
-    sequence_matcher:
-        class: diffengine.engines.SequenceMatcher
-        tokenizer: wikitext_split
+        
+    simplewiki:
+        domain: simple.wikipedia.org
 
 tokenizers:
     defaults: {}
@@ -123,33 +114,17 @@ tokenizers:
         class: diffengine.tokenizers.WikitextSplit
 
 segmenters:
-    defaults:
-        tokenizer: wikitext_split
+    defaults: {}
     
-    western_segmenter:
+    western_psw:
         class: deltas.segmenters.ParagraphSentencesAndWhitespace
         min_segment: 5
         whitespace: "[\\r\\n\\t\\ ]+"
         paragraph_split: "[\\t\\ \\r]*[\n][\\t\\ \\r]*[\n][\\t\\ \\r]*"
         sentence_end: "[.?!]+"
 
-datastores:
-    defaults:
-        class: diffengine.datastore.Mongo
-        port: 27017
-        
-    mongo_local:
-        host: localhost
-        dbname: diffengine_local
-        w: 1
-    
-    mongo_local_dev:
-        host: localhost
-        dbname: diffengine_dev
-        w: 0
 
-
-logging:
+loggers:
     defaults:
         formatters:
             human:

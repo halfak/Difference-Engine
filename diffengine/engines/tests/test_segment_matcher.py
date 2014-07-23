@@ -9,9 +9,9 @@ from ..segment_matcher import SegmentMatcher, SegmentMatcherStatus
 def test_segment_matcher():
     
     status = SegmentMatcherStatus(12)
-    segment_matcher = SegmentMatcher(status,
-                                     WikitextSplit(),
-                                     ParagraphsSentencesAndWhitespace())
+    segment_matcher = SegmentMatcher(WikitextSplit(),
+                                     ParagraphsSentencesAndWhitespace(),
+                                     status)
     
     rev_id = 34567
     timestamp = Timestamp(1234567890)

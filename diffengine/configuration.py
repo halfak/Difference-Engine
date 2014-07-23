@@ -1,8 +1,8 @@
-import yaml, importlib
+import yaml, importlib, copy
 
+from .util import dict_merge
 
-
-def propagate_defaults(doc):
+def propagate_defaults(config_doc):
     for key, sub_doc  in doc.items():
         if isinstance(sub_doc, dict):
             defaults = sub_doc.get('defaults', {})
@@ -10,25 +10,13 @@ def propagate_defaults(doc):
             for sub_key, sub_sub_doc in sub_doc.items():
                 
                 if isinstance(sub_sub_doc, dict):
-                    merge_config(sub_sub_doc, defaults)
+                    
+                    sub_doc[sub_key] = dict_merge(copy.deepcopy(defaults),
+                                                  sub_sub_doc)
+                    
         
     
-    return doc
-
-
-def merge_config(d, defaults):
-    
-    for key in defaults:
-        if key in d:
-            if isinstance(d[key], dict):
-                merge_config(d[key], defaults[key])
-        else:
-            d[key] = defaults[key]
-        
-    
-
-def from_path(path):
-    return from_file(open(path))
+    return config_doc
 
 def import_class(path):
         modules = path.split(".")
