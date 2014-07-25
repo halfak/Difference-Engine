@@ -1,22 +1,24 @@
 from nose.tools import eq_
-from deltas.segmenters import ParagraphsSentencesAndWhitespace
+
 from deltas import apply
+from deltas.segmenters import ParagraphsSentencesAndWhitespace
 
-from ...types import EngineStatus, Timestamp
 from ...tokenizers import WikitextSplit
-from ..segment_matcher import SegmentMatcher, SegmentMatcherStatus
+from ...types import ProcessorStatus, Timestamp
+from ..segment_matcher import (SegmentMatcher, SegmentMatcherProcessor,
+                               SegmentMatcherProcessorStatus)
 
-def test_segment_matcher():
+
+def test_segment_matcher_processor():
     
-    status = SegmentMatcherStatus(12)
-    segment_matcher = SegmentMatcher(WikitextSplit(),
-                                     ParagraphsSentencesAndWhitespace(),
-                                     status)
+    status = SegmentMatcherProcessorStatus(12)
+    processor = SegmentMatcherProcessor(status,
+                          WikitextSplit(), ParagraphsSentencesAndWhitespace())
     
     rev_id = 34567
     timestamp = Timestamp(1234567890)
     new_text_1 = "This is new text"
-    delta = segment_matcher.process(rev_id, timestamp, new_text_1)
+    delta = processor.process(rev_id, timestamp, new_text_1)
     
     eq_(delta.bytes, len(bytes(new_text_1, 'utf-8')))
     eq_(delta.chars, len(new_text_1))
@@ -25,7 +27,7 @@ def test_segment_matcher():
     rev_id = 457890
     timestamp = Timestamp(1234567891)
     new_text_2 = "This is newer text"
-    delta = segment_matcher.process(rev_id, timestamp, new_text_2)
+    delta = processor.process(rev_id, timestamp, new_text_2)
     
     eq_(delta.chars, 2)
     eq_(delta.bytes, 2)
@@ -38,5 +40,3 @@ def test_segment_matcher():
         b_tokens,
         list(apply([op.to_delta_op() for op in delta.operations], a_tokens, b_tokens))
     )
-    
-    

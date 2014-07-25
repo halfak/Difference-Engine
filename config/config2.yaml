@@ -14,20 +14,40 @@ daemons:
         logging: development
     
     enwiki:
-        class: diffengine.daemons.WebServerAndSynchronizer
+        class: diffengine.daemons.WebserverAndSynchronizer
         synchronizers:
             - enwiki_local
         web: production
         logging: production
 
-
 synchronizers:
     defaults: {}
     
-    simplewiki_local:
+    simplewiki:
         class: diffengine.synchronizers.Changes
         source: simplewiki_api
         engine: simplewiki_local
+    
+    enwiki:
+        class: diffengine.synchronizers.Changes
+        source: enwiki_api
+        engine: enwiki_local
+
+
+webservers:
+    defaults:
+        class: diffengine.webservers.DiffAPI
+        port: 80
+    
+    simplewiki_diffapi_dev:
+        engines: simplewiki_local
+        domain: diffengine.localhost.org
+        root: /
+        
+    enwiki_diffapi:
+        store: enwiki_local
+        domain: diffengine.wmflabs.org
+        root: /
 
 engines:
     defaults: {}
@@ -45,22 +65,6 @@ engines:
         store: enwiki_local
         segmenter: western_psw
         tokenizer: wikitext_split
-
-
-webservers:
-    defaults:
-        class: diffengine.webservers.DiffAPI
-        port: 80
-    
-    simplewiki_diffapi_dev:
-        store: simplewiki_local
-        domain: diffengine.localhost.org
-        root: /simplewiki/
-        
-    enwiki_diffapi:
-        store: enwiki_local
-        domain: diffengine.wmflabs.org
-        root: /enwiki/
 
 sources:
     defaults: {}

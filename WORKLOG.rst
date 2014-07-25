@@ -11,8 +11,6 @@ like.
 - Source --  A source of changes (new revisions).  (API or Database)
 - Store -- A location where a single wiki's difference information is stored
 
-
-
 2014-07-22
 ==========
 

@@ -1,5 +1,5 @@
 
-class Datastore:
+class Store:
     
     @classmethod
     def from_config(cls, config):

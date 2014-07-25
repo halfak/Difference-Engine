@@ -1,6 +1,10 @@
-import yaml, importlib, copy
+import copy
+import importlib
+
+import yaml
 
 from .util import dict_merge
+
 
 def propagate_defaults(config_doc):
     for key, sub_doc  in doc.items():

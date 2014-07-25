@@ -9,9 +9,8 @@ class InitError(Exception): pass
 
 class API(Synchronizer):
     
-    def __init__(self, status, wiki, engine, tokenizer, datastore,
-                       changes_per_request, max_wait, processor_cache_size,
-                       force=False):
+    def __init__(self, engine, changes_per_request, max_wait,
+                       processor_cache_size):
         
         super().__init__(status, wiki, engine, tokenizer, datastore)
         self.api = api.Session(wiki.api_url())

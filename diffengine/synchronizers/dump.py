@@ -1,12 +1,13 @@
 from mw.xml_dump import map
 
+
 class XMLDump(Synchronizer):
     
-    def __init__(self, sync_status, wiki, engine, datastore,
-                       paths, threads, force=False):
+    def __init__(self, engine, paths, threads=None, force=False):
         
-        super().__init__(sync_status, wiki, engine, datastore)
-        
+        super().__init__(engine)
+        self.paths = [str(path) for path in paths]
+        self.threads = threads
         self.sync_status.stats['touched'] = time.time()
         
     
@@ -15,7 +16,8 @@ class XMLDump(Synchronizer):
         max_rev_id = None
         max_timestamp = None
         
-        for processor_revision_or_dump in map(paths, self._process_dump):
+        for processor_revision_or_dump in map(paths, self._process_dump,
+                                              threads=self.threads):
             
             if isinstance(revision_processor_or_dump, Revision):
                 revision = revision_processor_or_dump
@@ -65,5 +67,3 @@ class XMLDump(Synchronizer):
             yield processor
         
         yield dump
-        
-        
