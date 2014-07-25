@@ -1,3 +1,16 @@
+2014-07-24
+==========
+Refactor mostly complete.
+
+- Engine(status, wiki, store)
+-- Processor(status)
+- Synchronizer(engine, source)
+- Webserver(engines)
+- Source(wiki_connection_info)
+- Store(database_connection_info)
+
+All is pulled from the config file (mwahahaha).
+
 2014-07-23
 ==========
 
@@ -49,7 +62,6 @@ their own thing within the diffengine.
 
 Diff functionality officially split out.  See http://github.org/halfak/deltas
 Woot.  OK.  So my plan for today is to start removing the diff functionality
-from this project and including it as a dependency.
 
 First, I need to go to conf.yaml to structure it to represent the imports from
 deltas. ... {{done}}
