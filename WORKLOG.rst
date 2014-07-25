@@ -2,12 +2,12 @@
 ==========
 Refactor mostly complete.
 
-- Engine(status, wiki, store)
--- Processor(status)
-- Synchronizer(engine, source)
-- Webserver(engines)
-- Source(wiki_connection_info)
-- Store(database_connection_info)
+* Engine(status, wiki, store)
+ * Processor(status)
+* Synchronizer(engine, source)
+* Webserver(engines)
+* Source(wiki_connection_info)
+* Store(database_connection_info)
 
 All is pulled from the config file (mwahahaha).
 
@@ -17,12 +17,12 @@ All is pulled from the config file (mwahahaha).
 Alright.  So I did a lot of work on config2.yaml.  I think I have a structure I
 like.
 
-- Engine -- Responsible for managing a store of diff information.
-  - Processor -- Responsible for managing a single page's diff information.
-- Synchronizer -- Conbines a source and an engine to load revisions into an Engine
-- Webserver -- Publishes a WSGI connector for serving diff information RESTfully
-- Source --  A source of changes (new revisions).  (API or Database)
-- Store -- A location where a single wiki's difference information is stored
+* Engine -- Responsible for managing a store of diff information.
+  * Processor -- Responsible for managing a single page's diff information.
+* Synchronizer -- Conbines a source and an engine to load revisions into an Engine
+* Webserver -- Publishes a WSGI connector for serving diff information RESTfully
+* Source --  A source of changes (new revisions).  (API or Database)
+* Store -- A location where a single wiki's difference information is stored
 
 2014-07-22
 ==========
