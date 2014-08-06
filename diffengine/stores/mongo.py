@@ -1,53 +1,65 @@
+import logging
+
 from pymongo import MongoClient
 
-from .types import Revision
+from .. import types
+from .store import Store
 
-class Mongo(Datastore):
+logger = logging.getLogger("diffengine.stores.mongo")
+
+class Mongo(Store):
     
     def __init__(self, db):
         self.db = db
         self.revisions = Revisions(self)
-    
+        self.engine_status = EngineStatus(self)
+        self.processor_status = ProcessorStatus(self)
     
     @classmethod
-    def from_params(cls, *args, *, db_name, **kwargs):
+    def from_params(cls, *args, db_name, **kwargs):
         client = MongoClient(*args, **kwargs)
         return cls(client[db_name])
     
     @classmethod
-    def from_config(cls, config, key):
+    def from_config(cls, config, name):
         return cls.from_params(
-            host=config[datastores][key]['host'],
-            port=config[datastores][key]['port'],
-            db_name=config[datastores][key]['db_name'],
-            w=config[datastores][key]['w']
+            host=config['stores'][name]['host'],
+            port=config['stores'][name]['port'],
+            db_name=config['stores'][name]['db_name'],
+            w=config['stores'][name]['w']
         )
     
 class Collection:
     
+    ID_FIELD = NotImplemented
+    
     def __init__(self, mongo):
         self.mongo = mongo
     
-    @classmethod
-    def _mongoify(cls, doc):
-        doc['_id'] = doc['rev_id']
-        del doc['rev_id']
+    def _mongoify(self, doc):
+        doc['_id'] = doc[self.ID_FIELD]
+        del doc[self.ID_FIELD]
+        return doc
     
-    @classmethod
-    def _demongoify(cls, doc)
-        doc['rev_id'] = doc['_id']
+    def _demongoify(self, doc):
+        doc[self.ID_FIELD] = doc['_id']
         del doc['_id']
+        return doc
     
     
 class Revisions(Collection):
+    
+    ID_FIELD = "rev_id"
     
     def store(self, revision):
         doc = revision.to_json()
         
         self.mongo.db.revisions.save(self._mongoify(doc))
+        
+        return True
     
     def query(self, rev_ids=None, page_id=None, after_id=None, before_id=None,
-                    to_json=True):
+                    type=types.Revision):
         
         constraints = {}
         if rev_ids != None:
@@ -62,31 +74,43 @@ class Revisions(Collection):
         docs = self.mongo.db.revisions.find(constraints)
         
         for doc in docs:
-            doc = self._demongoify(doc)
-            
-            if to_json:
-                yield doc
-            else:
-                yield Delta.from_json(doc)
+            yield Revision(self._demongoify(doc))
         
 
-class SychronizerStatus(Collection):
+class EngineStatus(Collection):
+    
+    ID_FIELD = "engine_info"
+    
+    def store(self, status):
+        assert isinstance(status, types.EngineStatus), str(status)
+        doc = status.to_json()
+        
+        self.mongo.db.engine_status.save(self._mongoify(doc))
+        self.mongo.db.engine_status.remove({'_id': {'$ne': doc['_id']}})
+    
+    def get(self, id=None, type=types.EngineStatus):
+        docs = list(self.mongo.db.engine_status.find(id).limit(2))
+        if len(docs) == 0:
+            return None
+        elif len(docs) > 1:
+            logger.warning("More than one engine status found in " + \
+                           "{0}.".format(self.mongo))
+        
+        return type(self._demongoify(docs[0]))
+        
+
+
+class ProcessorStatus(Collection):
+    
+    ID_FIELD = "page_id"
     
     def store(self, status):
         doc = status.to_json()
+
+        self.mongo.db.processor_status.save(self._mongoify(doc))
+
+    def get(self, page_id, type=types.ProcessorStatus):
         
-        self.mongo.db.synchronizer_status.store(self._mongoify(doc))
-    
-    def get(self, page_id): pass
-
-
-class Processor(Collection):
-
-    def store(self, status):
-        doc = status.to_json()
-
-        self.mongo.db.synchronizer_status.store(self._mongoify(doc))
-
-    def get(self, page_id, ):
+        doc = self.mongo.db.processor_status.find_one(page_id)
         
-        
+        if doc is None: return None

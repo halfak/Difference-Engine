@@ -1,13 +1,17 @@
 import inspect
 from itertools import chain
 
-def repr(instance):
-    return "%s(%s)" % (
-        instance.__class__.__name__,
-        ", ".join(
-            "%s=%r" % (k, v) for k, v in items(instance)
-        )
-    )
+
+def simple_repr(class_name, *args, **kwargs):
+    class_name = str(class_name)
+    arguments = [repr(arg) for arg in args]
+    arguments.extend("{0}={1}".format(k, repr(v)) for k, v in kwargs.items())
+    
+    return "{0}({1})".format(class_name, ", ".join(arguments))
+
+def kwargs_slots_repr(instance):
+    
+    return simple_repr(instance.__class__.__name__, **dict(items(instance)))
 
 def items(instance):
     for key in keys(instance):

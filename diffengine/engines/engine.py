@@ -1,32 +1,56 @@
-from .. import util
-from ..stores import Store
+import logging
+
+from .. import configuration, util
 from ..wiki import Wiki
 
+logger = logging.getLogger("diffengine.engines.engine")
 
 class Processor:
-	
-	def __init__(self, status):
-		self.status = ProcessorStatus(status)
-	
-	def process(self, rev_id, timestamp, user, text):
-		raise NotImplementedError()
+    
+    def __init__(self, status):
+        self.set_status(status)
+    
+    def set_status(self, status): raise NotImplementedError()
+    
+    def process(self, rev_id, timestamp, text):
+        raise NotImplementedError()
 
 class Engine:
-	
-	def __init__(self, wiki, store):
-		self.wiki  = Wiki(wiki)
-		self.store = Store(store)
-	
-	def info(self): raise NotImplementedError()
-	
-	def __str__(self): raise NotImplementedError()
-	
-	def __repr__(self): raise NotImplementedError()
-	
-	def get_processor(self, page_id):
-		processor_status = self.store.processor_status.get(page_id)
-		
-		if processor_status is None:
-			processor_status = self.PROCESSOR.STATUS(page_id)
-		
-		return self.PROCESSOR(processor_status, self.tokenizer, self.segmenter)
+    
+    def __init__(self, name, wiki):
+        self.name = str(name)
+        self.wiki = Wiki(wiki)
+    
+    def info(self): raise NotImplementedError()
+    
+    def set_status(self, status, force_reconfig=False):
+        if self.info() != status.engine_info:
+            if force_reconfig:
+                logger.warning("Overwriting engine status with " + \
+                               "new configuration.\n" + \
+                               " - stored: {0}\n".format(status.engine_info) + \
+                               " - configured: {0}".format(self.info()))
+                status.engine_info = self.info()
+            else:
+                raise ChangeWarning(
+                        "Stored engine status does " + \
+                        "not match configuration.\n" + \
+                        " - stored: {0}\n".format(status.engine_info) + \
+                        " - configured: {0}".format(self.info()))
+            
+        self.status = status
+    
+
+    def __str__(self): self.__repr__()
+    def __repr__(self):
+        return "{0}({1})".format(self.__class__.__name__,
+                                 ", ".join(repr(v)
+                                           for v in [self.name, self.wiki]))
+    
+    def processor(self, status): NotImplementedError()
+    
+    @classmethod
+    def from_config(cls, config, name):
+        EngineClass = \
+                configuration.import_class(config['engines'][name]['class'])
+        return EngineClass.from_config(config, name)

@@ -1,16 +1,18 @@
+import logging
 import traceback
+
+from mw import API
 
 from ..types import SyncronizerStatus
 from .synchronizer import Synchronizer
 
-from mw import API
+logger = logging.getLogger("diffengine.synchronizers.api")
 
 class InitError(Exception): pass
 
-class API(Synchronizer):
+class Changes(Synchronizer):
     
-    def __init__(self, engine, changes_per_request, max_wait,
-                       processor_cache_size):
+    def __init__(self, engine, source, processor_cache_size):
         
         super().__init__(status, wiki, engine, tokenizer, datastore)
         self.api = api.Session(wiki.api_url())
@@ -72,5 +74,3 @@ class API(Synchronizer):
         rev_ids = [int(rc['this_old_id']) for rc in change_docs]
         
         return self.api.revisions.query(rev_ids, properties={'ids', 'content'})
-    
-    

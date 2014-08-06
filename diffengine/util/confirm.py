@@ -1,4 +1,7 @@
-def confirm(question, default=None, stream=sys.stdout)
+import sys
+
+
+def confirm(question, default=None, stream=sys.stdout):
     """
     Prompts the user to respond yes or no.
     """
@@ -15,12 +18,12 @@ def confirm(question, default=None, stream=sys.stdout)
         raise ValueError("invalid default answer: '%s'" % default)
 
     while True:
-        sys.stdout.write(question + prompt)
-        choice = raw_input().lower().strip()
+        sys.stdout.write("\n" + question + prompt)
+        choice = input().lower().strip()
         if default is not None and choice == '':
-            return valid[default]
-        elif choice in valid:
-            return valid[choice]
+            return options[default]
+        elif choice in options:
+            return options[choice]
         else:
             stream.write("Please respond with 'yes' or 'no' "
-                         "(or 'y' or 'n').\n")
+                         "(or 'y' or 'n').")

@@ -1,3 +1,4 @@
+from . import instance
 
 
 class SelfConstructor:
@@ -18,3 +19,7 @@ class SelfConstructor:
     def __init__(self, *args, **kwargs): pass
     
     def initiate(self, *args, **kwargs): raise NotImplementedError()
+    
+    def __str__(self): return self.__repr__()
+    def __repr__(self):
+        return instance.kwargs_slots_repr(self)

@@ -1,11 +1,35 @@
+2014-07-25
+==========
+
+I was nearly home-free when I realized that the dump primer was looking pretty
+goddamn crazy.  The biggest problem is that I need to maintain database
+connections (via an Engine) for every XML mapper *or* I need to figure out how
+the mappers can share a single Engine.
+
+Arg!  This is silly!  If the Engine is responsible for storage, it's easy to
+write code that simply makes use of an Engine.  But if the engine is responsible
+for storage then it's hard to farm out the CPU intensive work.  Optimally, I'd
+like to be able to split the CPU intensive work from the data storage system.
+
+----
+
+Well... I think it is better.  I haven't fixed my XML processor issue, bit an
+Engine is no longer coupled with a Store.  Not totally sure this is better, but
+I feel better about it.  *fingers crossed* that I didn't just make a bunch of
+work for myself later.
+
 2014-07-24
 ==========
 Refactor mostly complete.
 
-* Engine(status, wiki, store)
+* Engine(name, tokenizer)
+    *.set_status(status)
+    *.processor(status)
 * Processor(status)
-* Synchronizer(engine, source)
-* Webserver(engines)
+    *.process(rev_id, timestamp, text)
+    *.set_status(status)
+* Synchronizer(source, engine, store)
+* Webserver(stores)
 * Source(wiki_connection_info)
 * Store(database_connection_info)
 

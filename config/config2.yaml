@@ -121,7 +121,7 @@ segmenters:
     defaults: {}
     
     western_psw:
-        class: deltas.segmenters.ParagraphSentencesAndWhitespace
+        class: diffengine.segmenters.ParagraphSentencesAndWhitespace
         min_segment: 5
         whitespace: "[\\r\\n\\t\\ ]+"
         paragraph_split: "[\\t\\ \\r]*[\n][\\t\\ \\r]*[\n][\\t\\ \\r]*"
@@ -157,5 +157,3 @@ loggers:
         loggers:
             main:
                 handlers: [var_log]
-              
-    

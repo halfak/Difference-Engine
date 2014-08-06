@@ -1,32 +1,15 @@
 
-from mw.api import Session
+from mw import api
 
 
-class APISource:
+class APIEvents:
     
-    def __init__(self, url, sync_status=None):
+    def __init__(self, api_url):
         
-        self.session = Session(url)
+        self.api_session = api.Session(api_url)
         self.set_status(sync_status)
     
-    def set_status(self, sync_status)
-        self.sync_status = sync_status
-    
-    def read(self, max_wait):
-        
-        if self.sync_status == None:
-            logger.warning("Starting synchronization with no status.  " +
-                           "Will start from the beginning.")
-            rccontinue = None
-            start = None
-        
-        elif hasattr(self.sync_status, "rccontinue"):
-            rccontinue = self.sync_status.rccontinue()
-            start = None
-        
-        else:
-            rccontinue = None
-            start = self.sync_status.last_timestamp()
+    def listen(self, start):
         
         change_docs, rccontinue = self.session.recent_changes._query(
                 direction = "newer",
@@ -36,3 +19,8 @@ class APISource:
                 properties={'ids', 'timestamp'}
         )
         for change_doc in change_docs:
+        
+    
+    def _read_changes(self, rccontinue):
+        
+    def _

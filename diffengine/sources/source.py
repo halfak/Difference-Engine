@@ -1,3 +1,3 @@
 
 
-class Source: pass
+class EventSource: pass

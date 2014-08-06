@@ -2,68 +2,99 @@ maintainer:
     name: Aaron Halfaker
     email: aaron.halfaker@gmail.com
 
-root_dir: /home/halfak/projects/diffengine
+root_dir: /diffengine
 
 daemons:
     defaults: {}
     
-    development:
-        class: diffengine.daemons.WebAndSync
-        name: Difference Engine (development)
-        datastore: mongo_local_dev
+    simplewiki (dev):
+        class: diffengine.daemons.Syncronizer
         synchronizers:
-            - bgwiki
-        web: development
+            - simplewiki_local
         logging: development
     
-    production:
-        class: diffengine.daemons.WebAndSync
-        name: Difference Engine (production)
-        datastore: mongo_local
+    enwiki:
+        class: diffengine.daemons.WebserverAndSynchronizer
         synchronizers:
-            - enwiki
-            - frwiki
-            - ptwiki
-            - itwiki
+            - enwiki_local
         web: production
         logging: production
-    
 
-web:
+
+synchronizers:
     defaults: {}
-        
-    development:
-        domain: diffengine.localhost.org
-        port: 8081
-        
-    production:
-        domain: diffengine.wmflabs.org
-        port: 80
+    
+    simplewiki_local:
+        class: diffengine.synchronizers.Changes
+        source: simplewiki_api
+        engine: simplewiki_local
+    
+    enwiki_local:
+        class: diffengine.synchronizers.Changes
+        source: enwiki_api
+        engine: enwiki_local
 
-synchronizer:
+
+webservers:
     defaults:
-        class: diffengine.synchronizers.APISync
-        max_wait: 5 # seconds
-        engine: western_segment_matcher
+        class: diffengine.webservers.DiffAPI
+        port: 80
     
-    bgwiki:
-        wiki: bgwiki
+    simplewiki_diffapi_dev:
+        stores:
+            - enwiki_local
+        domain: diffengine.localhost.org
+        root: /
+        
+    enwiki_diffapi:
+        store: enwiki_local
+        domain: diffengine.wmflabs.org
+        root: /
+
+engines:
+    defaults: {}
     
-    enwiki:
+    Simple English Wikipedia (local, development):
+        class: diffengine.engines.SegmentMatcher
+        wiki: simplewiki
+        segmenter: western_psw
+        tokenizer: wikitext_split
+    
+    English Wikipedia (local, development):
+        class: diffengine.engines.SegmentMatcher
         wiki: enwiki
+        segmenter: western_psw
+        tokenizer: wikitext_split
+
+sources:
+    defaults: {}
     
-    frwiki:
-        wiki: frwiki
-    
-    ptwiki:
-        wiki: ptwiki
-    
-    itwiki:
-        wiki: itwiki
-    
-    testwiki:
+    simplewiki_api:
+        class: diffengine.sources.API
         wiki: testwiki
+        max_wait: 10
     
+    enwiki_api:
+        class: diffengine.sources.API
+        wiki: enwiki
+        max_wait: 5
+
+stores:
+    defaults:
+        port: 27017
+        w: 1
+    
+    simplewiki_local:
+        class: diffengine.stores.Mongo
+        host: localhost
+        db_name: simplewiki
+    
+    enwiki_local:
+        class: diffengine.stores.Mongo
+        host: localhost
+        db_name: enwiki
+    
+
 wikis:
     defaults:
         protocol: https
@@ -75,39 +106,15 @@ wikis:
             index: index.php
             api: api.php
     
-    bgwiki:
-        domain: bg.wikipedia.org
-    
-    dewiki:
-        domain: de.wikipedia.org
-    
     enwiki:
+        name: English Wikipedia
         domain: en.wikipedia.org
-    
-    frwiki:
-        domain: fr.wikipedia.org
-    
-    itwiki:
-        domain: it.wikipedia.org
-    
-    metawiki:
-        domain: meta.wikimedia.org
-    
-    testwiki:
-        protocol: http
-        domain: localhost
-        port: 8080
-
-engines:
-    defaults: {}
-    
-    western_segment_matcher:
-        class: diffengine.engines.SegmentMatcher
-        segmenter: western_segmenter
-    
-    sequence_matcher:
-        class: diffengine.engines.SequenceMatcher
-        tokenizer: wikitext_split
+        dbname: enwiki
+        
+    simplewiki:
+        name: Simple English Wikipedia
+        domain: simple.wikipedia.org
+        dbname: simplewiki
 
 tokenizers:
     defaults: {}
@@ -116,34 +123,19 @@ tokenizers:
         class: diffengine.tokenizers.WikitextSplit
 
 segmenters:
-    defaults:
-        tokenizer: wikitext_split
+    defaults: {}
     
-    western_segmenter:
-        class: deltas.segmenters.ParagraphSentencesAndWhitespace
-        min_segment: 5
+    western_psw:
+        class: diffengine.segmenters.ParagraphsSentencesAndWhitespace
+        min_sentence: 5
         whitespace: "[\\r\\n\\t\\ ]+"
         paragraph_split: "[\\t\\ \\r]*[\n][\\t\\ \\r]*[\n][\\t\\ \\r]*"
         sentence_end: "[.?!]+"
 
-datastores:
-    defaults:
-        class: diffengine.datastore.Mongo
-        port: 27017
-        
-    mongo_local:
-        host: localhost
-        dbname: diffengine_local
-        w: 1
-    
-    mongo_local_dev:
-        host: localhost
-        dbname: diffengine_dev
-        w: 0
 
-
-logging:
+loggers:
     defaults:
+        version: 1
         formatters:
             human:
                 format: '%(asctime)s %(levelname)-8s %(name)-15s %(message)s'
@@ -151,25 +143,36 @@ logging:
             json:
                 class: jsonlogger.JsonFormatter
         handlers:
-            std_err:
-                class: logging.handlers.StreamHandler
+            std_err_info:
+                class: logging.StreamHandler
                 formatter: human
-                stream  : ext://sys.stdout
-            var_log:
-                class: logging.handlers.RotatingFileHandler
-                formatter: json
-                level: ERROR
-                filename: /var/log/diffengine/error.json
-                maxBytes: 1048576
-                backupCount: 5
+                stream  : ext://sys.stderr
+                level: INFO
+            std_err_debug:
+                class: logging.StreamHandler
+                formatter: human
+                stream  : ext://sys.stderr
+                level: DEBUG
+            #var_log:
+            #    class: logging.handlers.RotatingFileHandler
+            #    formatter: json
+            #    level: ERROR
+            #    filename: /var/log/diffengine/error.json
+            #    maxBytes: 1048576
+            #    backupCount: 5
+    
+    debug:
+        loggers:
+            main:
+                handlers: [std_err_debug]
     
     development:
         loggers:
             main:
-                handlers: [std_err]
+                handlers: [std_err_info]
     production:
         loggers:
             main:
-                handlers: [var_log]
-              
-    
+                handlers:
+                    - std_err_info
+                    - var_log

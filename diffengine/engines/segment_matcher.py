@@ -1,8 +1,15 @@
-from deltas import segment_matcher, Segmenter
+import logging
+
+from deltas import segment_matcher
 
 from ..errors import RevisionOrderError
+from ..segmenters import Segmenter
+from ..tokenizers import Tokenizer
 from ..types import Delta, EngineStatus, Operation, ProcessorStatus
+from ..wiki import Wiki
 from .engine import Engine, Processor
+
+logger = logging.getLogger("diffengine.engines.segment_matcher")
 
 
 class SegmentMatcherProcessorStatus(ProcessorStatus):
@@ -23,20 +30,19 @@ class SegmentMatcherProcessorStatus(ProcessorStatus):
 
 class SegmentMatcherProcessor(Processor):
     
-    STATUS = SegmentMatcherProcessorStatus
+    Status = SegmentMatcherProcessorStatus
     
     def __init__(self, status, tokenizer, segmenter):
-        
-        self.status = SegmentMatcherProcessorStatus(status)
-        
+        super().__init__(status)
         self.tokenizer = tokenizer
         self.segmenter = segmenter
-        
+    
+    def set_status(self, status):
+        self.status = SegmentMatcherProcessorStatus(status)
         self.last_text = "".join(self.status.last_tokens)
     
     def process(self, rev_id, timestamp, text):
-        if rev_id < self.status.last_rev_id:
-            raise RevisionOrderError(self.status.last_rev_id, rev_id)
+        self.status.check_order(rev_id, timestamp)
         
         tokens = self.tokenizer.tokenize(text)
         
@@ -60,36 +66,21 @@ class SegmentMatcherProcessor(Processor):
         
         return delta
 
+class SegmentMatcherStatus(EngineStatus): pass
+
 class SegmentMatcher(Engine):
     
-    PROCESSOR = SegmentMatcherProcessor
+    Status = SegmentMatcherStatus
+    Processor = SegmentMatcherProcessor
     
-    def __init__(self, wiki, store, tokenizer, segmenter, force=False):
-        super().__init__(wiki, store)
+    def __init__(self, name, wiki, tokenizer, segmenter):
+        super().__init__(name, wiki)
         self.tokenizer = tokenizer
         self.segmenter = segmenter
-        
-        status = self.store.get_status()
-        
-        if status == None:
-            if force:
-                status = EngineStatus(self.info)
-            else:
-                raise ChangeWarning("No engine status found.\n" + \
-                                    " - configured: {0}\n".format(self.info()))
-        
-        if self.info() != status.engine_info:
-            if force:
-                status.engine_info = self.info()
-            else:
-                raise ChangeWarning(
-                        "Stored engine status does " + \
-                        "not match configuration.\n" + \
-                        " - stored: {0}\n".format(status.engine_info) + \
-                        " - configured: {0}\n".format(self.info()))
-            
-        self.status = status
-        
+    
+    
+    def processor(self, status):
+        return self.Processor(status, self.tokenizer, self.segmenter)
     
     def info(self):
         return str(self)
@@ -100,9 +91,22 @@ class SegmentMatcher(Engine):
         return "{0}({1})".format(
             self.__class__.__name__,
             ", ".join([
+                repr(self.name),
                 repr(self.wiki),
-                repr(self.store),
                 repr(self.tokenizer),
                 repr(self.segmenter)
             ])
+        )
+    
+    @classmethod
+    def from_config(cls, config, name):
+        engine_config = config['engines'][name]
+        wiki = Wiki.from_config(config, engine_config['wiki'])
+        tokenizer = Tokenizer.from_config(config, engine_config['tokenizer'])
+        segmenter = Segmenter.from_config(config, engine_config['segmenter'])
+        return cls(
+            name,
+            wiki,
+            tokenizer,
+            segmenter
         )

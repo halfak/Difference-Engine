@@ -1,6 +1,7 @@
 import time
 from collections import defaultdict
 
+from ..errors import RevisionOrderError
 from .jsonable_type import JsonableType
 from .timestamp import Timestamp
 
@@ -17,11 +18,19 @@ class ProcessorStatus(JsonableType):
         self.stats          = defaultdict(lambda: 0, stats or {})
         
     def processed(self, rev_id, timestamp):
+        self.check_order(rev_id, timestamp)
         self.set_state(rev_id, timestamp)
         self._increment_revisions()
     
     def _increment_revisions(self):
         self.stats['revisions_processed'] += 1
+    
+    def check_order(self, rev_id, timestamp):
+        if self.last_timestamp is not None and \
+           (self.last_timestamp, self.last_rev_id) >= (timestamp, rev_id):
+                raise RevisionOrderError(
+                        (self.last_timestamp, self.last_rev_id),
+                        (timestamp, rev_id))
     
     def set_state(self, last_rev_id, last_timestamp, **stats):
         

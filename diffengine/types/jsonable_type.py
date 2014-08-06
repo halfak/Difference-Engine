@@ -1,6 +1,6 @@
 from .. import util
 
-JSON_TYPES = {str, int, float}
+JSON_TYPES = {str, int, float, type(None)}
 
 class JsonableType(util.SelfConstructor):
     def __new__(cls, *args, **kwargs):
@@ -25,7 +25,7 @@ class JsonableType(util.SelfConstructor):
     def __str__(self): return self.__repr__()
     
     def __repr__(self):
-        return util.instance.repr(self)
+        return util.instance.kwargs_slots_repr(self)
     
     def to_json(self):
         return {k:self._to_json(v) for k, v in util.instance.items(self)}
@@ -47,5 +47,3 @@ class JsonableType(util.SelfConstructor):
     @classmethod
     def from_json(cls, doc):
         return cls(**doc)
-    
-        

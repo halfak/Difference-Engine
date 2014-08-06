@@ -3,11 +3,11 @@
 
 class RevisionOrderError(RuntimeError):
     
-    def __init__(self, last_rev_id, rev_id):
+    def __init__(self, last_rev, rev):
         
         message = "Revisions out of order.  " + \
-                  "Last rev ID {0}.  ".format(last_rev_id) + \
-                  "Current rev ID {0}.  ".format(rev_id)
+                  "Last rev {0}.  ".format(last_rev) + \
+                  "Current rev {0}.  ".format(rev)
         
         super().__init__(message)
 

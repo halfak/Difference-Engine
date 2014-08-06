@@ -1,2 +1,4 @@
 deltas
 mediawiki-utilities
+pymongo
+pyyaml
