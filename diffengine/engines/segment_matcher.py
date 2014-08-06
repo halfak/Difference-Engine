@@ -13,9 +13,9 @@ logger = logging.getLogger("diffengine.engines.segment_matcher")
 
 
 class SegmentMatcherProcessorStatus(ProcessorStatus):
-    
-    def initiate(self, page_id, last_rev_id=0, last_tokens=None, **kwargs):
-        super().initiate(page_id, last_rev_id, **kwargs)
+    __slots__ = ('last_tokens',)
+    def initialize(self, page_id, last_rev_id=0, last_tokens=None, **kwargs):
+        super().initialize(page_id, last_rev_id, **kwargs)
         
         self.last_tokens = last_tokens or []
     

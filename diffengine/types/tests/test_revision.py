@@ -2,7 +2,8 @@ from nose.tools import eq_
 
 from ..delta import Delta
 from ..operations import Delete, Equal, Insert
-from ..revision import Revision, Timestamp
+from ..revision import Revision
+from ..timestamp import Timestamp
 from ..user import User
 
 

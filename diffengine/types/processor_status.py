@@ -1,15 +1,17 @@
 import time
 from collections import defaultdict
 
+from jsonable import JSONable
+
 from ..errors import RevisionOrderError
-from .jsonable_type import JsonableType
 from .timestamp import Timestamp
 
 
-class ProcessorStatus(JsonableType):
+class ProcessorStatus(JSONable):
     __slots__ = ('page_id', 'last_rev_id', 'last_timestamp', 'stats')
     
-    def initiate(self, page_id, last_rev_id=0, last_timestamp=None, stats=None):
+    def initialize(self, page_id, last_rev_id=0, last_timestamp=None,
+                   stats=None):
         self.page_id        = int(page_id)
         self.last_rev_id    = int(last_rev_id)
         self.last_timestamp = Timestamp(last_timestamp) \

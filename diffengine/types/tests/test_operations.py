@@ -1,6 +1,7 @@
 from nose.tools import eq_
 
-from ..operations import Operation, OperationWithTokens, Insert, Equal, Delete
+from ..operations import Delete, Equal, Insert, Operation
+
 
 def test_operation():
     a1 = 0
@@ -26,7 +27,6 @@ def test_operation_with_tokens():
     tokens = ['one', 'two', 'three']
     insert = Insert(a1, a2, b1, b2, tokens)
     assert isinstance(insert, Operation)
-    assert isinstance(insert, OperationWithTokens)
     
     
     eq_(insert.a1, a1)

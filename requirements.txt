@@ -2,3 +2,6 @@ deltas
 mediawiki-utilities
 pymongo
 pyyaml
+docopt
+nose
+jsonable

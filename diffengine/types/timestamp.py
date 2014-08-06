@@ -1,11 +1,12 @@
 import mw
 
-from .jsonable_type import JsonableType
+from jsonable import JSONable
+
 
 class Timestamp(mw.Timestamp):
     
     def to_json(self):
-        return self.unix()
+        return self.short_format()
     
     @classmethod
     def from_json(cls, doc):

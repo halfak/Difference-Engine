@@ -1,9 +1,8 @@
-from .jsonable_type import JsonableType
+from jsonable import JSONable
 
 
-class User(JsonableType):
+class User(JSONable):
     __slots__ = ("id", "text")
-    
-    def initiate(self, id, text):
+    def initialize(self, id, text):
         self.id = int(id) if id is not None else None
         self.text = str(text)
