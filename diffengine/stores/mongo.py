@@ -89,7 +89,7 @@ class EngineStatus(Collection):
         self.mongo.db.engine_status.remove({'_id': {'$ne': doc['_id']}})
     
     def get(self, id=None, type=types.EngineStatus):
-        docs = list(self.mongo.db.engine_status.find(id).limit(2))
+        docs = list(self.mongo.db.engine_status.find().limit(2))
         if len(docs) == 0:
             return None
         elif len(docs) > 1:
@@ -114,3 +114,5 @@ class ProcessorStatus(Collection):
         doc = self.mongo.db.processor_status.find_one(page_id)
         
         if doc is None: return None
+        else:
+            return type(self._demongoify(doc))

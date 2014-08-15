@@ -55,6 +55,13 @@ class XMLDump(Synchronizer):
         engine_status = self.store.engine_status.get(type=self.engine.Status)
         if engine_status is None:
             logger.info("Starting {0} from scratch.".format(self.engine.info()))
+            engine_status = self.engine.Status(self.engine.info())
+        
+        engine_status = self.engine.Status(self.engine.info())
+        print("Storing status")
+        self.store.engine_status.store(engine_status)
+        print(engine_status.to_json())
+        return
         
         max_rev_id = 0
         max_timestamp = Timestamp(0)
@@ -85,9 +92,11 @@ class XMLDump(Synchronizer):
                 self.store.processor_status.store(processor_status)
                 
                 logger.debug("Completed processing page " + \
-                             "{0}. {1}".format(page_title, processor_status.stats))
+                             "{0}. {1}".format(
+                                     page_title,
+                                     processor_status.stats))
                 
-            elif isinstance(revision_processor_or_dump, xml_dump.Iterator):
+            elif isinstance(revision_processor_or_dump, Iterator):
                 dump = revision_processor_or_dump
                 path = meta
                 
@@ -100,4 +109,4 @@ class XMLDump(Synchronizer):
         
         self.status.update(max_rev_id, max_timestamp)
         
-        self.store.engine_status.store(self.status)
+        self.store.engine_status.store(engine_status)

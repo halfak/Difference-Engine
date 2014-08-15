@@ -1,29 +1,31 @@
 import copy
 
+from jsonable import JSONable
+
 from . import util
 
 
-class Paths(util.SelfConstructor):
+class Paths(JSONable):
     __slots__ = ('pages', 'scripts')
     
-    def initiate(self, pages, scripts):
+    def initialize(self, pages, scripts):
         self.pages = str(pages)
         self.scripts = str(scripts)
         
     
-class Scripts(util.SelfConstructor):
+class Scripts(JSONable):
     __slots__ = ('index', 'api')
     
-    def initiate(self, index, api):
+    def initialize(self, index, api):
         self.index = str(index)
         self.api = str(api)
     
 
 
-class Wiki(util.SelfConstructor):
+class Wiki(JSONable):
     __slots__ = ('name', 'dbname', 'protocol', 'domain', 'paths', 'scripts',
                  'port')
-    def initiate(self, name, dbname, protocol, domain, paths, scripts, port):
+    def initialize(self, name, dbname, protocol, domain, paths, scripts, port):
         self.name = str(name)
         self.dbname = str(dbname)
         self.protocol = str(protocol)

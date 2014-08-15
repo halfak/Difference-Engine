@@ -1,3 +1,20 @@
+2014-08-15
+==========
+Well...  Wikimania went nicely.  The whole value-added-to-Wikipedia concept was
+relatively well recieved.  It looks like I need ot kick into gear!  Happily, I have the entire dump of SimpleEnglish Wikipedia loaded.  Sadly, I forgot to pull
+some changes, so I have unix_timestamps in the revision.timestamp field rather
+than the short DB format (YYYYMMDDHHMMSS) so, that's a fun problem to solve.
+
+I've been working on JSONable too in order to make sure that pickling will work
+as expected.
+
+Anyway, I'm loggin' today because I need to capture an idea.  It's simple.  My
+priming script should write out json files that can be loaded into a database
+rather than writing directly to the database.  This might break some nice
+abstractions that I have with "stores" and such, but it requires a nice
+separation of concerns that I'd like to enforce.  Engines do *not* write to a
+"store" on their own.  They produce things that can be writen to a store. 
+
 2014-07-25
 ==========
 
