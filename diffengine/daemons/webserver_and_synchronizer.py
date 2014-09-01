@@ -1,3 +1,6 @@
+from .daemon import Daemon
+
+
 class WebserverAndSynchronizer(Daemon):
     
     def __init__(self, name, webserver, synchronizers):

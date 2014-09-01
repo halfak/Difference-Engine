@@ -13,14 +13,13 @@ class APIEvents:
         
         change_docs, rccontinue = self.session.recent_changes._query(
                 direction = "newer",
-                start = start
+                start = start,
                 rccontinue = rccontinue,
                 types={'edit', 'new', 'external'},
                 properties={'ids', 'timestamp'}
         )
         for change_doc in change_docs:
-        
+            pass
     
     def _read_changes(self, rccontinue):
-        
-    def _
+        pass

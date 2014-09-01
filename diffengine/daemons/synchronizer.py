@@ -1,4 +1,5 @@
-from .daemone import Daemon
+from .daemon import Daemon
+
 
 class Synchronizer(Daemon):
     
@@ -13,7 +14,7 @@ class Synchronizer(Daemon):
     
     def _all_ok(self):
         return sum(s.isAlive() for s in self.synchronizers) == \
-               len(self.synchronizers):
+               len(self.synchronizers)
     
     def _graceful_stop(self):
         

@@ -1,6 +1,8 @@
 import logging
 
+from gridfs import GridFS
 from pymongo import MongoClient
+from pymongo.errors import DocumentTooLarge
 
 from .. import types
 from .store import Store
@@ -52,9 +54,21 @@ class Revisions(Collection):
     ID_FIELD = "rev_id"
     
     def store(self, revision):
-        doc = revision.to_json()
+        doc = self._mongoify(revision.to_json())
         
-        self.mongo.db.revisions.save(self._mongoify(doc))
+        try:
+            self.mongo.db.revisions.save(doc)
+        except DocumentTooLarge as e:
+            delta = doc['delta']
+            file_system = GridFS(self.mongo.db, "revisions")
+            file_system.delete(doc['rev_id'])
+            doc['delta'] = {'grid_id': doc['rev_id']}
+            with file_system.new_file(_id=doc['rev_id'], encoding='utf-8') as f:
+                
+                json.dumps(delta, f)
+            
+            self.mongo.db.revisions.save(doc)
+            
         
         return True
     
@@ -74,6 +88,11 @@ class Revisions(Collection):
         docs = self.mongo.db.revisions.find(constraints)
         
         for doc in docs:
+            if 'grid_id' in doc['delta']:
+                file_system = GridFS(self.mongo.db, "revisions")
+                with file_system.get(doc['rev_id']) as f:
+                    doc['delta'] = json.loads(f)
+                
             yield Revision(self._demongoify(doc))
         
 

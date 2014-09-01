@@ -1,9 +1,9 @@
 import logging
 import traceback
 
-from mw import API
+from mw import api
 
-from ..types import SyncronizerStatus
+from ..types import ProcessorStatus
 from .synchronizer import Synchronizer
 
 logger = logging.getLogger("diffengine.synchronizers.api")

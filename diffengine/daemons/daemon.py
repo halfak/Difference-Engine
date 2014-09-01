@@ -38,7 +38,7 @@ class Daemon:
             raise
           
     def status(self):
-        if self.up_since != None
+        if self.up_since != None:
             uptime = time.time() - self.up_since
         else:
             uptime = None
@@ -46,4 +46,3 @@ class Daemon:
             'name': self.name,
             'uptime': uptime
         }
-    
