@@ -57,12 +57,6 @@ class XMLDump(Synchronizer):
             logger.info("Starting {0} from scratch.".format(self.engine.info()))
             engine_status = self.engine.Status(self.engine.info())
         
-        engine_status = self.engine.Status(self.engine.info())
-        print("Storing status")
-        self.store.engine_status.store(engine_status)
-        print(engine_status.to_json())
-        return
-        
         max_rev_id = 0
         max_timestamp = Timestamp(0)
         
