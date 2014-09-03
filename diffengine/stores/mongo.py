@@ -61,9 +61,9 @@ class Revisions(Collection):
         except DocumentTooLarge as e:
             delta = doc['delta']
             file_system = GridFS(self.mongo.db, "revisions")
-            file_system.delete(doc['rev_id'])
-            doc['delta'] = {'grid_id': doc['rev_id']}
-            with file_system.new_file(_id=doc['rev_id'], encoding='utf-8') as f:
+            file_system.delete(doc['_id'])
+            doc['delta'] = {'grid_id': doc['_id']}
+            with file_system.new_file(_id=doc['_id'], encoding='utf-8') as f:
                 
                 json.dumps(delta, f)
             
