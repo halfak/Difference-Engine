@@ -23,7 +23,8 @@ class Synchronizer(Thread):
                 status = self.engine.Status(self.engine.info())
             else:
                 raise ChangeWarning("No engine status found.\n" + \
-                                    " - configured: {0}\n".format(self.engine.info()))
+                                    " - configured: {0}\n"\
+                                        .format(self.engine.info()))
         
         if self.engine.info() != status.engine_info:
             if force_config:
@@ -52,18 +53,3 @@ class Synchronizer(Thread):
             logger.debug("Constructing a new process from " + \
                          "{0}".format(processor_status))
             return self.engine.processor(processor_status)
-
-class LoopWaiter(Synchronizer):
-    
-    def __init__(self, *args, max_wait, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.max_wait = float(max_wait)
-    
-    def run(self):
-        while not self._stop_requested:
-            start = time.time()
-            
-            wait = self.synchronize()
-            
-            # Wait up to max_wait before performing the next synchronization
-            if wait: time.sleep(self.max_wait - (time.time()-start))

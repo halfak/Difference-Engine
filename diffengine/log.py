@@ -11,17 +11,17 @@ DEFAULT = {
         'std_err': {
             'class': "logging.handlers.StreamHandler",
             'formatter': "human",
-            'stream'  : "ext://sys.stdout"
+            'stream'  : "ext://sys.stdout",
+            'level': "DEBUG"
         }
     },
     'loggers': {
-        'main': {
+        '': {
             'handlers': ["std_err"]
         }
     }
 }
 
 def load_config(config, name=None):
-    
     logger_config_dict = config['loggers'].get(name, DEFAULT)
     logging.config.dictConfig(logger_config_dict)

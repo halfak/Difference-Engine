@@ -10,11 +10,18 @@ logger = logging.getLogger("diffengine.synchronizers.api")
 
 class InitError(Exception): pass
 
+def read_n(iterator, n):
+    for i, value in enumerate(iterator):
+        yield value
+        if i+1 == n: break
+    
+
+
 class Changes(Synchronizer):
     
     def __init__(self, engine, source, processor_cache_size):
         
-        super().__init__(status, wiki, engine, tokenizer, datastore)
+        super().__init__(engine, source)
         self.api = api.Session(wiki.api_url())
         self.changes_per_request = int(changes_per_request)
         self.max_wait = int(max_wait)
@@ -24,12 +31,15 @@ class Changes(Synchronizer):
         def _get_cached_processor(self, page_id):
             self._get_processor(page_id)
         
-        self._get_cached_processor = _get_cached_page_processor
+        self._get_cached_processor = _get_cached_processor
         
         # Reconfigure status
-        self.status.stats['processor_cache_size'] = processor_cache_size
-        self.status.stats['changes_per_request'] = changes_per_request
-        self.status.stats['max_wait'] = max_wait
+        self.stats['processor_cache_size'] = processor_cache_size
+        self.stats['changes_per_request'] = changes_per_request
+        self.stats['max_wait'] = max_wait
+        
+    
+    def _process_events(self, events):
         
     
     def _synchronize_revisions(self):
@@ -59,15 +69,17 @@ class Changes(Synchronizer):
         return revisions_processed
     
     def _run(self):
+        
+        event_listener = \
+                self.source.events.listen(engine_status=self.engine.status)
+        
+        events = deque(50)
         while not self._stop_requested:
-            start = time.time()
-            
-            changes_prcessed = self._synchronize_revisions()
+            events = read_n(event_listener, 50)
+            self._process_events(events)
             self._store_status()
             
-            if changes_processed < self.changes_per_request:
-                # Wait up to max_wait before sending the next request.
-                time.sleep(self.max_wait - (time.time()-start))
+        
     
     
     def _get_revisions(self, change_docs):

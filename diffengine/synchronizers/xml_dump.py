@@ -30,13 +30,25 @@ class XMLDump(Synchronizer):
         
         def _process_dump(dump, path):
             for page in dump:
-                logger.debug("Constructing new processor for {0}.".format(page.title))
-                new_status = self.engine.Processor.Status(page.id)
-                processor = self.engine.processor(new_status)
+                logger.debug("Constructing new processor for {0}."\
+                                 .format(page.title))
+                
+                processor_status = self.store.processor_status.get(page.id,
+                                              type=self.engine.Processor.Status)
+                if processor_status is None:
+                    processor_status = self.engine.Processor.Status(page.id)
+                
+                processor = self.engine.processor(processor_status)
                 
                 for rev in page:
+                    if rev.id <= processor_status.last_rev_id:
+                        
+                        logger.debug("Skipping revision (already processed) " +\
+                                     "{0}:{1}".format(rev.id, rev.timestamp))
+                        continue
                     try:
-                        user = User(rev.contributor.id, rev.contributor.user_text)
+                        user = User(rev.contributor.id,
+                                    rev.contributor.user_text)
                         delta = processor.process(rev.id, rev.timestamp,
                                                   rev.text)
                         revision = Revision(rev.id, rev.timestamp, page.id,

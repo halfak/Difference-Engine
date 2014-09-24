@@ -143,16 +143,10 @@ loggers:
             json:
                 class: jsonlogger.JsonFormatter
         handlers:
-            std_err_info:
+            std_err:
                 class: logging.StreamHandler
                 formatter: human
                 stream  : ext://sys.stderr
-                level: INFO
-            std_err_debug:
-                class: logging.StreamHandler
-                formatter: human
-                stream  : ext://sys.stderr
-                level: DEBUG
             #var_log:
             #    class: logging.handlers.RotatingFileHandler
             #    formatter: json
@@ -163,16 +157,33 @@ loggers:
     
     debug:
         loggers:
-            main:
-                handlers: [std_err_debug]
-    
+            'diffengine':
+                handlers: [std_err]
+                level: DEBUG
+            'primer':
+                handlers: [std_err]
+                level: DEBUG
+            'daemon':
+                handlers: [std_err]
+                level: DEBUG
+
     development:
         loggers:
-            main:
-                handlers: [std_err_info]
+            'primer':
+                handlers: [std_err]
+                level: INFO
+            'daemon':
+                handlers: [std_err]
+                level: INFO
     production:
         loggers:
-            main:
+            'primer':
                 handlers:
                     - std_err_info
                     - var_log
+                level: INFO
+            'daemon':
+                handlers:
+                    - std_err_info
+                    - var_log
+                level: INFO

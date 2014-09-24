@@ -1,3 +1,4 @@
+import json
 import logging
 
 from gridfs import GridFS
@@ -56,6 +57,9 @@ class Revisions(Collection):
     def store(self, revision):
         doc = self._mongoify(revision.to_json())
         
+        logger.debug("Storing revision {0} with {1} operations.".format(
+                    doc['_id'], len(doc['delta.operations'])))
+        
         try:
             self.mongo.db.revisions.save(doc)
         except DocumentTooLarge as e:
@@ -69,6 +73,8 @@ class Revisions(Collection):
             
             self.mongo.db.revisions.save(doc)
             
+        
+        logger.debug("Storing revision {0} stored!".format(doc['_id']))
         
         return True
     
