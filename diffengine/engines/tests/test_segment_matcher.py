@@ -1,19 +1,23 @@
 from deltas import apply
-from deltas.segmenters import ParagraphsSentencesAndWhitespace
 from nose.tools import eq_, raises
 
 from ...errors import RevisionOrderError
+from ...segmenters import ParagraphsSentencesAndWhitespace
 from ...tokenizers import WikitextSplit
 from ...types import ProcessorStatus, Timestamp
+from ...wiki import Paths, Scripts, Wiki
 from ..segment_matcher import (SegmentMatcher, SegmentMatcherProcessor,
                                SegmentMatcherProcessorStatus)
 
 
 def test_segment_matcher_processor():
-    
+    wiki = Wiki("test", "test", "http", "en.wikipedia.org",
+            Paths("/w/", "/wiki/"), Scripts("index.php", "api.php"),
+            80)
+    engine = SegmentMatcher("test", wiki, WikitextSplit(),
+                            ParagraphsSentencesAndWhitespace())
     status = SegmentMatcherProcessorStatus(12)
-    processor = SegmentMatcherProcessor(status,
-                          WikitextSplit(), ParagraphsSentencesAndWhitespace())
+    processor = SegmentMatcherProcessor(status, engine)
     
     rev_id = 34567
     timestamp = Timestamp(1234567890)

@@ -32,39 +32,24 @@ class SegmentMatcherProcessor(Processor):
     
     Status = SegmentMatcherProcessorStatus
     
-    def __init__(self, status, tokenizer, segmenter):
+    def __init__(self, status, engine):
         super().__init__(status)
-        self.tokenizer = tokenizer
-        self.segmenter = segmenter
+        self.engine = engine
     
     def set_status(self, status):
         self.status = SegmentMatcherProcessorStatus(status)
-        self.last_text = "".join(self.status.last_tokens)
     
     def process(self, rev_id, timestamp, text):
         self.status.check_order(rev_id, timestamp)
         
-        tokens = self.tokenizer.tokenize(text)
+        tokens = self.engine.tokenizer.tokenize(text)
         
-        deltas_ops = segment_matcher.diff(
-            self.status.last_tokens,
-            tokens,
-            segmenter = self.segmenter
-        )
-        operations = [Operation.from_delta_op(op, self.status.last_tokens,
-                                              tokens)
-                      for op in deltas_ops]
-        
-        char_diff = len(text) - len(self.last_text)
-        byte_diff = len(bytes(text, 'utf-8', 'replace')) - \
-                    len(bytes(self.last_text, 'utf-8', 'replace'))
-        
-        delta = Delta(char_diff, byte_diff, operations)
+        delta = self.engine.diff(self.status.last_tokens, tokens)
         
         self.status.processed(rev_id, timestamp, tokens)
-        self.last_text = text
         
         return delta
+        
 
 class SegmentMatcherStatus(EngineStatus): pass
 
@@ -80,7 +65,25 @@ class SegmentMatcher(Engine):
     
     
     def processor(self, status):
-        return self.Processor(status, self.tokenizer, self.segmenter)
+        return self.Processor(status, self)
+    
+    def diff(self, last, current):
+        if isinstance(last, str): last = self.tokenizer.tokenize(last)
+        if isinstance(current, str): current = self.tokenizer.tokenize(current)
+        
+        deltas_ops = segment_matcher.diff(
+            last,
+            current,
+            segmenter = self.segmenter
+        )
+        operations = [Operation.from_delta_op(op, last, current)
+                      for op in deltas_ops]
+        
+        char_diff = len("".join(current)) - len("".join(last))
+        byte_diff = len(bytes("".join(current), 'utf-8', 'replace')) - \
+                    len(bytes("".join(last), 'utf-8', 'replace'))
+        
+        return Delta(char_diff, byte_diff, operations)
     
     def info(self):
         return str(self)
