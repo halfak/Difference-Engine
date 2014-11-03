@@ -42,7 +42,7 @@ webservers:
     
     simplewiki_diffapi_dev:
         stores:
-            - enwiki_local
+            - simplewiki_local
         domain: diffengine.localhost.org
         root: /
         
@@ -93,6 +93,11 @@ stores:
         class: diffengine.stores.Mongo
         host: localhost
         db_name: enwiki
+    
+    enwiki_test_local:
+        class: diffengine.stores.Mongo
+        host: localhost
+        db_name: enwiki_test
     
 
 wikis:
@@ -166,17 +171,29 @@ loggers:
             'daemon':
                 handlers: [std_err]
                 level: DEBUG
+            'mw.xml_dump':
+                handlers: [std_err]
+                level: INFO
 
     development:
         loggers:
+            'diffengine':
+                handlers: [std_err]
+                level: INFO
             'primer':
                 handlers: [std_err]
                 level: INFO
             'daemon':
                 handlers: [std_err]
                 level: INFO
+            'mw.xml_dump':
+                handlers: [std_err]
+                level: INFO
     production:
         loggers:
+            'diffengine':
+                handlers: [std_err]
+                level: DEBUG
             'primer':
                 handlers:
                     - std_err_info

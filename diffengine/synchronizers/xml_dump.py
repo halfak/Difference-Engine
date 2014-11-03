@@ -8,10 +8,11 @@ Assumptions:
 """
 
 import logging
+import traceback
 
 from mw.xml_dump import Iterator, map, open_file
 
-from .. import errors
+from ..errors import RevisionOrderError
 from ..types import ProcessorStatus, Revision, Timestamp, User
 from .synchronizer import Synchronizer
 
@@ -29,40 +30,51 @@ class XMLDump(Synchronizer):
     def run(self):
         
         def _process_dump(dump, path):
-            for page in dump:
-                logger.debug("Constructing new processor for {0}."\
-                                 .format(page.title))
-                
-                processor_status = self.store.processor_status.get(page.id,
+            try:
+                for page in dump:
+                    logger.debug("Constructing new processor for {0}:{1}"\
+                                 .format(page.namespace, page.title)
+                    
+                    processor_status = self.store.processor_status.get(page.id,
                                               type=self.engine.Processor.Status)
-                if processor_status is None:
-                    processor_status = self.engine.Processor.Status(page.id)
-                
-                processor = self.engine.processor(processor_status)
-                
-                for rev in page:
-                    if rev.id <= processor_status.last_rev_id:
-                        
-                        logger.debug("Skipping revision (already processed) " +\
-                                     "{0}:{1}".format(rev.id, rev.timestamp))
-                        continue
-                    try:
-                        user = User(rev.contributor.id,
-                                    rev.contributor.user_text)
-                        delta = processor.process(rev.id, rev.timestamp,
-                                                  rev.text)
-                        revision = Revision(rev.id, rev.timestamp, page.id,
-                                            user, delta)
-                        yield revision, None
-                    except errors.RevisionOrderError as e:
-                        logger.error(str(e))
-                        logger.info("Skipping revision " + \
+                    
+                    if processor_status is None:
+                        processor_status = self.engine.Processor.Status(page.id)
+                    
+                    processor = self.engine.processor(processor_status)
+                    
+                    for rev in page:
+                        if rev.id <= processor_status.last_rev_id:
+                            
+                            logger.debug(
+                                    "Skipping revision (already processed) " +\
                                     "{0}:{1}".format(rev.id, rev.timestamp))
-                        pass
+                            continue
+                        try:
+                            user = User(rev.contributor.id,
+                                        rev.contributor.user_text)
+                            delta = processor.process(rev.id, rev.timestamp,
+                                                      rev.text)
+                            revision = Revision(rev.id, rev.timestamp, page.id,
+                                                user, delta)
+                            yield (revision, None)
+                        except RevisionOrderError as e:
+                            logger.error(traceback.format_exc())
+                            logger.info("Skipping revision (out of order) " + \
+                                        "{0}:{1}".format(rev.id, rev.timestamp))
+                    
+                    logger.debug("Finished processing page {0}:{1}"\
+                                 .format(page.namespace, page.title))
+                    
+                    yield (processor.status, page.title)
                 
-                yield processor.status, page.title
+                logger.debug("Finished processing dump at {0}".format(path))
+                yield (path, None)
             
-            yield dump, path
+            
+            except Exception as e:
+                logger.error(traceback.format_exc())
+                raise
         
         engine_status = self.store.engine_status.get(type=self.engine.Status)
         if engine_status is None:
@@ -74,45 +86,51 @@ class XMLDump(Synchronizer):
         
         if len(self.paths) == 1:
             dump = Iterator.from_file(open_file(self.paths[0]))
-            revision_processor_or_dumps = _process_dump(dump, self.paths[0])
+            rev_proc_or_paths = _process_dump(dump, self.paths[0])
         else:
-            revision_processor_or_dumps = map(self.paths, _process_dump,
-                                             **self.map_kwargs)
+            rev_proc_or_paths = map(self.paths, _process_dump,
+                                    **self.map_kwargs)
         
-        
-        for revision_processor_or_dump, meta in revision_processor_or_dumps:
+        try:
+            for rev_proc_or_path, meta in rev_proc_or_paths:
+                
+                if isinstance(rev_proc_or_path, Revision):
+                    revision = rev_proc_or_path
+                    
+                    self.store.revisions.store(revision)
+                    self.status.stats['revisions_processed'] += 1
+                    
+                    max_rev_id = max(revision.rev_id, max_rev_id)
+                    max_timestamp = max(revision.timestamp, max_timestamp)
+                    
+                elif isinstance(rev_proc_or_path, ProcessorStatus):
+                    processor_status = rev_proc_or_path
+                    page_title = meta
+                        
+                    logger.debug("Completed processing page " + \
+                                 "{0}. {1}".format(
+                                         page_title,
+                                         processor_status.stats))
+                    
+                    self.store.processor_status.store(processor_status)
+                    
+                    
+                elif isinstance(rev_proc_or_path, str):
+                    path = rev_proc_or_path
+                    
+                    logger.info("Completed processing dump {0}".format(path))
+                    
+                else:
+                    raise RuntimeError(
+                            "Did not expect a " + \
+                            "{0}".format(type(rev_proc_or_path)))
+                
+                
             
-            if isinstance(revision_processor_or_dump, Revision):
-                revision = revision_processor_or_dump
-                
-                self.store.revisions.store(revision)
-                self.status.stats['revisions_processed'] += 1
-                
-                max_rev_id = max(revision.rev_id, max_rev_id)
-                max_timestamp = max(revision.timestamp, max_timestamp)
-                
-            elif isinstance(revision_processor_or_dump, ProcessorStatus):
-                processor_status = revision_processor_or_dump
-                page_title = meta
-                
-                self.store.processor_status.store(processor_status)
-                
-                logger.debug("Completed processing page " + \
-                             "{0}. {1}".format(
-                                     page_title,
-                                     processor_status.stats))
-                
-            elif isinstance(revision_processor_or_dump, Iterator):
-                dump = revision_processor_or_dump
-                path = meta
-                
-                logger.debug("Completed processing dump {0}".format(path))
-                
-            else:
-                raise RuntimeError(
-                        "Did not expect a " + \
-                        "{0}".format(type(revision_processor_or_dump)))
+            self.status.update(max_rev_id, max_timestamp)
+            
+            self.store.engine_status.store(engine_status)
         
-        self.status.update(max_rev_id, max_timestamp)
-        
-        self.store.engine_status.store(engine_status)
+        except Exception as e:
+            logger.error(traceback.format_exc())
+            raise

@@ -1,25 +1,44 @@
 
 from mw import api
 
+from mwevents import PageCreated, RevisionSaved
+from mwevents.sources import API
+from mwevents.types import StateMarker
 
-class APIEvents:
+for event in listener:
+    if isinstance(event, RevisionSaved):
+        print(event.revision)
+    else: # isinstance(event, PageCreated):
+        print(event.page)
+
+class Events:
     
-    def __init__(self, api_url):
+    def __init__(self, session):
         
-        self.api_session = api.Session(api_url)
-        self.set_status(sync_status)
+        api_source = API(session)
     
-    def listen(self, start):
+    def listener(self, engine_status):
         
-        change_docs, rccontinue = self.session.recent_changes._query(
-                direction = "newer",
-                start = start,
-                rccontinue = rccontinue,
-                types={'edit', 'new', 'external'},
-                properties={'ids', 'timestamp'}
-        )
-        for change_doc in change_docs:
-            pass
+        state_marker = StateMarker(last_event=engine_status.last_timestamp,
+                                   last_rev_id=engine_status.last_rev_id)
+        
+        return api_source.listener(state_marker=state_marker,
+                                   events={RevisionSaved, PageCreated})
     
-    def _read_changes(self, rccontinue):
-        pass
+
+class Revisions:
+    
+    def __init__(self, session):
+        self.session = session
+    
+    def get(self, rev_id):
+        return self.sessions.revisions.get(rev_id,
+                                           properties={'ids', 'timestamp',
+                                                       'user', 'userid',
+                                                       'content'})
+    
+    def all_for_page(self, page_id, up_to_rev_id):
+        return self.sessions.revisions.query(pageids={page_id},
+                                             properties={'ids', 'timestamp',
+                                                         'user', 'userid',
+                                                         'content'})

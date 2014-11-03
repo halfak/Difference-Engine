@@ -6,15 +6,18 @@ Usage:
     primer <engine> <store> <dump_path>... [--config=<path>]
                                            [--logger=<logging>]
                                            [--profile]
+                                           [--threads=<count>]
 
 Options:
-    -h --help        Shows this documentation
+    -h --help          Shows this documentation
     <engine>           The name of engine to prime
     <store>            The name of store to prime
     --config=<path>    The path to a configuration file
                        [default: ./config.yaml]
     --logger=<logger>  Which logging configuration to use
                        [default: debug]
+    --profile          Produce profiling information
+    --threads=<count>  How many threads to start up?
 """
 import logging
 import logging.config
@@ -36,7 +39,8 @@ def main():
     config = configuration.from_file(open(args['--config']))
     
     start = lambda: run(config, args['<engine>'], args['<store>'],
-                                args['<dump_path>'], args['--logger'])
+                                args['<dump_path>'], args['--logger'],
+                                args['--threads'])
     
     try:
         if args['--profile']:
@@ -48,7 +52,9 @@ def main():
             print(stats)
     
 
-def run(config, engine_name, store_name, paths, logger_name):
+def run(config, engine_name, store_name, paths, logger_name, threads):
+    
+    threads = int(threads) if threads is not None else None
     
     log.load_config(config, logger_name)
     
@@ -59,12 +65,13 @@ def run(config, engine_name, store_name, paths, logger_name):
     store = Store.from_config(config, store_name)
     
     try:
-        primer = XMLDump(engine, store, paths)
+        primer = XMLDump(engine, store, paths, threads=threads)
     except errors.ChangeWarning as e:
-        sys.stderr.write(str(e))
+        print(str(e))
         if confirm("Would you like to continue anyway?", default="no",
                    stream=sys.stderr):
-            primer = XMLDump(engine, store, paths, force_config=True)
+            primer = XMLDump(engine, store, paths,
+                             force_config=True, threads=threads)
         else:
             sys.exit(1)
     

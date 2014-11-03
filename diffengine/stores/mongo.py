@@ -58,7 +58,7 @@ class Revisions(Collection):
         doc = self._mongoify(revision.to_json())
         
         logger.debug("Storing revision {0} with {1} operations.".format(
-                    doc['_id'], len(doc['delta.operations'])))
+                    doc['_id'], len(doc['delta']['operations'])))
         
         try:
             self.mongo.db.revisions.save(doc)

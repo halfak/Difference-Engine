@@ -1,8 +1,8 @@
-from nose.tools import eq_
-
 from deltas import apply
 from deltas.segmenters import ParagraphsSentencesAndWhitespace
+from nose.tools import eq_, raises
 
+from ...errors import RevisionOrderError
 from ...tokenizers import WikitextSplit
 from ...types import ProcessorStatus, Timestamp
 from ..segment_matcher import (SegmentMatcher, SegmentMatcherProcessor,
@@ -40,3 +40,30 @@ def test_segment_matcher_processor():
         b_tokens,
         list(apply([op.to_delta_op() for op in delta.operations], a_tokens, b_tokens))
     )
+
+
+def test_revision_out_of_order():
+    
+    status = SegmentMatcherProcessorStatus(12)
+    processor = SegmentMatcherProcessor(status,
+                          WikitextSplit(), ParagraphsSentencesAndWhitespace())
+    
+    delta = processor.process(
+        1001,
+        Timestamp(1234567890),
+        "This is new text"
+    )
+    try:
+        delta = processor.process(
+            1000,
+            Timestamp(1234567890),
+            "This is new text"
+        )
+    except RevisionOrderError:
+        delta = processor.process(
+            1002,
+            Timestamp(1234567891),
+            "This is new text"
+        )
+    else:
+        assert False, "Should have thrown a RevisionOrderError"
