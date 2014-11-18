@@ -11,18 +11,28 @@ Options:
                      to configure an appropriate set of diff processors.
     --config=<path>  The path to a configuration file. [default: ./config.yaml]
 """
-import json
-import logging
-import logging.config
-import profile
-import sys
+try:
+    if os.path.exists("virtualenv"):
+        sys.path.insert(0, "virtualenv")
+        from bin import activate_this
+    
+    import json
+    import logging
+    import logging.config
+    import profile
+    import sys
+    
+    from docopt import docopt
+    from mw import xml_dump
 
-from docopt import docopt
+    from diffengine import configuration, errors
+    from diffengine.engines import Engine
+    from diffengine.types import Revision, User
+    from diffengine.util import confirm
 
-from diffengine import configuration, errors
-from diffengine.engines import Engine
-from diffengine.types import Revision, User
-from diffengine.util import confirm
+except:
+    raise
+
 
 
 def main():
@@ -44,9 +54,9 @@ def run(config, engine_name, page_xml_stream):
             last, current = revisions
             delta = engine.diff(last.text, current.text)
             
-            if revision.contributor is not None:
-                user_id = revision.contributor.id
-                user_text = revision.contributor.user_text
+            if current.contributor is not None:
+                user_id = current.contributor.id
+                user_text = current.contributor.user_text
             else:
                 user_id = None
                 user_text = None
@@ -65,5 +75,4 @@ def run(config, engine_name, page_xml_stream):
             )
     
 
-if __name__ == '__main__':
-    main()
+if __name__ == '__main__': main()

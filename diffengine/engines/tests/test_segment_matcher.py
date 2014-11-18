@@ -42,15 +42,19 @@ def test_segment_matcher_processor():
     
     eq_(
         b_tokens,
-        list(apply([op.to_delta_op() for op in delta.operations], a_tokens, b_tokens))
+        list(apply([op.to_delta_op() for op in delta.operations],
+                   a_tokens, b_tokens))
     )
 
 
 def test_revision_out_of_order():
-    
+    wiki = Wiki("test", "test", "http", "en.wikipedia.org",
+            Paths("/w/", "/wiki/"), Scripts("index.php", "api.php"),
+            80)
+    engine = SegmentMatcher("test", wiki, WikitextSplit(),
+                            ParagraphsSentencesAndWhitespace())
     status = SegmentMatcherProcessorStatus(12)
-    processor = SegmentMatcherProcessor(status,
-                          WikitextSplit(), ParagraphsSentencesAndWhitespace())
+    processor = SegmentMatcherProcessor(status, engine)
     
     delta = processor.process(
         1001,

@@ -33,7 +33,7 @@ class XMLDump(Synchronizer):
             try:
                 for page in dump:
                     logger.debug("Constructing new processor for {0}:{1}"\
-                                 .format(page.namespace, page.title)
+                                 .format(page.namespace, page.title))
                     
                     processor_status = self.store.processor_status.get(page.id,
                                               type=self.engine.Processor.Status)
