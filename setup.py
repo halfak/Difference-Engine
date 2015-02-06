@@ -1,6 +1,6 @@
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 def read(fname):
@@ -18,7 +18,7 @@ setup(
 	description = ("A difference tracker for MediaWiki."),
 	license = "MIT",
 	url = "https://github.com/halfak/Difference-Engine",
-	py_modules = ['diffengine'],
+	packages = find_packages(),
 	long_description = read('README.rst'),
 	install_requires = requirements('requirements.txt'),
 	classifiers=[
